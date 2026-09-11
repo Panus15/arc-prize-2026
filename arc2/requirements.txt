@@ -1,0 +1,10 @@
+# Runtime + test dependencies for the ARC-AGI-2 workspace.
+#
+# The dataset repo (github.com/arcprize/ARC-AGI-2) ships task JSON only — it has
+# no requirements.txt of its own. This file is what `setup.sh` / `setup.bat`
+# install into .venv.
+numpy>=1.26
+pytest>=8.0
+
+# Optional, not installed by default:
+#   matplotlib>=3.8   # PNG/plot rendering of grids (arc.render is ANSI-only, zero-dep)

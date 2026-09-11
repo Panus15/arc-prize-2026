@@ -1,0 +1,10 @@
+# Matches the root project's lint settings; `arc` is this workspace's own package.
+line-length = 100
+target-version = "py311"
+
+[lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
+[lint.isort]
+known-first-party = ["arc"]

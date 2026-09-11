@@ -1,0 +1,8 @@
+# The dataset is a pinned external checkout, not vendored source.
+# `setup.sh` / `setup.bat` create it; see README.md.
+ARC-AGI-2/
+
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
