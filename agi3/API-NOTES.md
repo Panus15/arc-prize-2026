@@ -59,3 +59,51 @@ uv run main.py --agent=random --game=ls20
 - scoring ลงโทษ action เกินจำเป็นแบบกำลังสอง แต่ internal reasoning ฟรี
   → คุ้มที่จะคิดเยอะก่อนกด 1 ครั้ง มากกว่ากดลองหลายครั้ง
 - `Playback` ที่มีอยู่แล้วทำให้ทดสอบ policy ซ้ำ ๆ ได้โดยไม่เปลืองโควตา API
+
+---
+
+## เพิ่มเติม: กับดักที่เจอตอนเขียนโค้ดจริง (11 ก.ย. 2026)
+
+### 1. `GameAction(int)` ใช้ไม่ได้ — และนี่คือกับดักที่ทำให้โค้ดพังเงียบ ๆ
+
+`FrameData.available_actions` คืนค่าเป็น `list[int]` แต่ **สร้าง `GameAction` จาก int ตรง ๆ ไม่ได้**
+
+```python
+GameAction(1)   # ValueError: 1 is not a valid GameAction
+```
+
+เพราะ `_value2member_map_` ใช้คีย์เป็น **tuple `(value, action_class)`**:
+
+```
+{(0, SimpleAction): GameAction.RESET, (1, SimpleAction): GameAction.ACTION1, ...
+ (6, ComplexAction): GameAction.ACTION6, ...}
+```
+
+ทางแก้อยู่ที่ `arcagi3/actions.py` → `action_from_value()` / `actions_from_values()`
+มีเทสคุมไว้ว่าถ้า SDK รุ่นใหม่แก้เรื่องนี้ เทสจะ fail เพื่อให้ถอด workaround ออกได้
+
+### 2. ACTION6 เป็น `ComplexAction` ตัวเดียวในชุด
+
+อีก 7 ตัว (RESET, ACTION1-5, ACTION7) เป็น `SimpleAction`
+→ ACTION6 ต้องส่ง payload ใน `ActionInput.data` (น่าจะเป็นพิกัด click)
+**เลือกแค่ตัว enum เฉย ๆ ไม่พอ** ยังไม่ได้ยืนยันรูปแบบ data เพราะยังไม่ได้ต่อ API จริง
+
+### 3. `ActionInput` มีฟิลด์ `reasoning`
+
+```python
+ActionInput(id=GameAction.ACTION1, data={}, reasoning=...)
+```
+
+สอดคล้องกับที่กติกาบอกว่า **internal reasoning ไม่ถูกนับเป็นต้นทุน แต่ action ถูกนับ**
+
+### 4. `EnvironmentScore` ยืนยันว่าคะแนนวัดประสิทธิภาพ ไม่ใช่แค่จบเกม
+
+ฟิลด์ที่มีจริง: `level_actions`, `level_baseline_actions`, `level_scores`,
+`actions`, `resets`, `levels_completed`
+
+→ **มี baseline ต่อ level ให้เทียบ** การจบเกมอย่างเดียวไม่พอ ต้องจบด้วยจำนวน action ที่ใกล้ baseline
+
+### 5. SDK รันเกมในเครื่องได้ — ไม่ต้องใช้ API key ตอนพัฒนา
+
+`arc_agi.local_wrapper.LocalEnvironmentWrapper` + `arcengine.base_game.ARCBaseGame`
+→ เขียนเกมเองแล้วรันผ่าน wrapper ตัวเดียวกับที่ใช้ตอนแข่งได้
