@@ -107,3 +107,44 @@ ActionInput(id=GameAction.ACTION1, data={}, reasoning=...)
 
 `arc_agi.local_wrapper.LocalEnvironmentWrapper` + `arcengine.base_game.ARCBaseGame`
 → เขียนเกมเองแล้วรันผ่าน wrapper ตัวเดียวกับที่ใช้ตอนแข่งได้
+
+---
+
+## ยืนยัน: ความหมายของแต่ละ action (13 ก.ย. 2026)
+
+จาก `inference/agent/action_names.py` ของโซลูชันที่ชนะ Milestone #1:
+
+| engine | ความหมายในเกม |
+|---|---|
+| `ACTION1` | UP |
+| `ACTION2` | DOWN |
+| `ACTION3` | LEFT |
+| `ACTION4` | RIGHT |
+| `ACTION5` | SPACE |
+| `ACTION6` | MOUSE — ส่ง `row`, `col` |
+| `RESET` | RESET |
+
+**`ACTION7` ไม่ถูก map ไว้** — ยังไม่รู้ว่าใช้ทำอะไร
+
+รูปแบบการสั่ง: `action(['LEFT'])` หรือ `action([{'action':'MOUSE','row':4,'col':7}])`
+
+## Perception ที่ผู้ชนะใช้ (สำคัญ)
+
+prompt ของเขาบอกชัดว่า **ไม่ให้โมเดลเห็น grid ตัวเลขดิบเลย** ("The raw numeric grid is
+intentionally not exposed") แต่ให้ **segmentation** แทน:
+
+- node = วัตถุสี่เชื่อม (4-connected) สีเดียวกัน · เรียง id จากบนลงล่าง ซ้ายไปขวา
+- แต่ละ node มี: `color`, `pixels`, `boundary`, `children` (วัตถุที่ถูกล้อมอยู่ข้างใน),
+  และ **`hash` = ลายเซ็นรูปร่าง+สีที่ไม่ขึ้นกับตำแหน่ง** → ใช้ติดตามวัตถุข้ามเฟรม
+- `adjacency_list` = คู่ node ที่ติดกัน
+
+เราสร้างชั้นนี้ไว้แล้วที่ `arcagi3/perception.py`
+
+### กับดักที่ผู้ชนะเตือนไว้เอง
+
+> แถบยาวติดขอบจอมักเป็น **timer/HUD ไม่ใช่ชิ้นส่วนปริศนา**
+> ความผิดพลาดที่พบบ่อยคือไปไล่คลิกทีละช่องบนแถบนั้น
+
+- board จริงคือ **64×64**
+- `WIN` = จบทั้งเกม ส่วนการผ่าน level กลางทางจะเห็นเป็น **คะแนนเพิ่มขึ้นแต่เกมยังเล่นต่อ**
+- **อย่าสมมติว่ามีตัวละครให้บังคับ** บางเกมไม่มี player avatar เลย

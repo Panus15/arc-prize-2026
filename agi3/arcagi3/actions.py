@@ -24,6 +24,25 @@ INTERACT = GameAction.ACTION5
 # cannot emit one by picking the bare enum member.
 COMPLEX_ACTIONS: frozenset[GameAction] = frozenset({GameAction.ACTION6})
 
+# What each action means in the games, confirmed against the Milestone #1
+# winner's action_names.py. ACTION7 appears in the enum but is not mapped there,
+# so its meaning is still unknown.
+ACTION_MEANING: dict[GameAction, str] = {
+    GameAction.RESET: "RESET",
+    GameAction.ACTION1: "UP",
+    GameAction.ACTION2: "DOWN",
+    GameAction.ACTION3: "LEFT",
+    GameAction.ACTION4: "RIGHT",
+    GameAction.ACTION5: "SPACE",
+    GameAction.ACTION6: "MOUSE",
+}
+
+
+def describe(action: GameAction) -> str:
+    """Human-readable name for logs and traces."""
+    return ACTION_MEANING.get(action, action.name)
+
+
 _BY_VALUE: dict[int, GameAction] = {action.value: action for action in GameAction}
 
 
