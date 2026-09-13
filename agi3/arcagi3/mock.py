@@ -66,10 +66,20 @@ class MockEnvironment:
 
     game_id = "mock-cursor-walk"
 
-    def __init__(self, levels: tuple[Level, ...] = LEVELS) -> None:
+    def __init__(
+        self,
+        levels: tuple[Level, ...] = LEVELS,
+        moves: dict[GameAction, tuple[int, int]] | None = None,
+    ) -> None:
+        """`moves` overrides which action goes which way.
+
+        Scrambling it is how a policy gets tested for actually learning the
+        controls rather than assuming the usual ACTION1-is-up layout.
+        """
         if not levels:
             raise ValueError("need at least one level")
         self._levels = levels
+        self._moves = dict(MOVES if moves is None else moves)
         self._level_index = 0
         self._pos = levels[0].start
         self._state = GameState.NOT_PLAYED
@@ -116,8 +126,8 @@ class MockEnvironment:
             self._pos = self.level.start
             return self._frame(action, full_reset=True)
 
-        if action in MOVES and action in self.available_actions():
-            dy, dx = MOVES[action]
+        if action in self._moves and action in self.available_actions():
+            dy, dx = self._moves[action]
             self._pos = (self._pos[0] + dy, self._pos[1] + dx)
         elif action is INTERACT and self._pos == self.level.target:
             self._advance_level()
@@ -135,7 +145,7 @@ class MockEnvironment:
 
         level, (y, x) = self.level, self._pos
         actions = [GameAction.RESET]
-        for action, (dy, dx) in MOVES.items():
+        for action, (dy, dx) in self._moves.items():
             ny, nx = y + dy, x + dx
             in_bounds = 0 <= ny < level.height and 0 <= nx < level.width
             if in_bounds and (ny, nx) not in level.walls:

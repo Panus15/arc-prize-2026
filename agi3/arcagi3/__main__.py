@@ -7,8 +7,13 @@ import sys
 
 from arcagi3.agent import BaseAgent, GreedyAgent, RandomAgent
 from arcagi3.budget import run_episode
+from arcagi3.explorer import ExplorerAgent
 
-AGENTS: dict[str, type[BaseAgent]] = {"random": RandomAgent, "greedy": GreedyAgent}
+AGENTS: dict[str, type[BaseAgent]] = {
+    "random": RandomAgent,
+    "greedy": GreedyAgent,
+    "explorer": ExplorerAgent,
+}
 
 
 def _play(args: argparse.Namespace) -> int:
