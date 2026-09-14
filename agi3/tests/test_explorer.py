@@ -104,10 +104,27 @@ def test_scrambling_costs_the_explorer_nothing():
 
 
 def test_a_hard_coded_policy_collapses_on_scrambled_controls():
-    """The contrast that gives the previous test its meaning."""
+    """The contrast that gives the previous test its meaning.
+
+    It stumbles through the first level — a straight line, where a wrong turn
+    still sometimes lands right — and then never finishes another.
+    """
     result = run_episode(GreedyAgent(), MockEnvironment(moves=SCRAMBLED), max_actions=200)
     assert not result.won
-    assert result.levels_completed == 0
+    assert result.levels_completed < result.total_levels
+    assert result.truncated
+
+
+def test_play_is_reproducible_across_runs():
+    """Guards a real bug: iterating a set of GameAction picked a different
+
+    fallback action in each process, because enum members hash by identity. A
+    run whose result changes between processes cannot be reported honestly.
+    """
+    first = run_episode(GreedyAgent(), MockEnvironment(moves=SCRAMBLED), max_actions=60)
+    second = run_episode(GreedyAgent(), MockEnvironment(moves=SCRAMBLED), max_actions=60)
+    assert first.levels_completed == second.levels_completed
+    assert first.actions_used == second.actions_used
 
 
 def test_learning_the_controls_costs_only_a_few_actions():

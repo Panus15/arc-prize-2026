@@ -87,7 +87,7 @@ class GreedyAgent(BaseAgent):
         if cursor is None or target is None or cursor == target:
             if INTERACT in available:
                 return INTERACT
-            return next(iter(available - {GameAction.RESET}), GameAction.RESET)
+            return _fallback(available)
 
         dy = target[0] - cursor[0]
         dx = target[1] - cursor[1]
@@ -102,7 +102,19 @@ class GreedyAgent(BaseAgent):
         for action in preferred:
             if action is not None and action in available:
                 return action
-        return next(iter(available - {GameAction.RESET}), GameAction.RESET)
+        return _fallback(available)
+
+
+def _fallback(available: set[GameAction]) -> GameAction:
+    """Lowest-numbered action that is not RESET, or RESET if there is none.
+
+    Iterating the set directly would be non-deterministic: GameAction members
+    hash by identity, so set order changes between processes and the same board
+    would produce different play on different runs. Anything a competition run
+    reports has to be reproducible, so the tie is broken by action value.
+    """
+    usable = sorted(available - {GameAction.RESET}, key=lambda a: a.value)
+    return usable[0] if usable else GameAction.RESET
 
 
 def _find(grid: list[list[int]], symbol: int) -> tuple[int, int] | None:
