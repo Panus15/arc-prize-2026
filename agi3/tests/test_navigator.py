@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from arcengine import GameAction
+
 from arcagi3.agent import GreedyAgent
 from arcagi3.budget import run_episode
 from arcagi3.explorer import ExplorerAgent
@@ -98,3 +100,71 @@ def test_a_low_trust_threshold_still_finishes():
 def test_navigator_emits_only_legal_actions_on_the_maze():
     """act() raises on an illegal choice, so completing the maze proves it."""
     assert run_episode(NavigatorAgent(), maze(), max_actions=200).won
+
+
+# --- abandoning a mapping that stops working -------------------------------
+
+NORMAL_MOVES = {
+    GameAction.ACTION1: (-1, 0),
+    GameAction.ACTION2: (1, 0),
+    GameAction.ACTION3: (0, -1),
+    GameAction.ACTION4: (0, 1),
+}
+FLIPPED_MOVES = {action: (-d[0], -d[1]) for action, d in NORMAL_MOVES.items()}
+
+
+class SwitchingEnvironment(MockEnvironment):
+    """Reverses every control once the first level is cleared.
+
+    The winner's own prompt warns that mechanics can change between levels, and
+    one recorded game produced a confident mapping that was wrong on all 20
+    passes. A policy that cannot notice its map has stopped describing the game
+    will spend the rest of the run following it.
+    """
+
+    def _advance_level(self) -> None:
+        super()._advance_level()
+        self._moves = dict(FLIPPED_MOVES)
+
+
+def test_navigator_recovers_when_the_controls_change_mid_game():
+    agent = NavigatorAgent()
+    result = run_episode(agent, SwitchingEnvironment(moves=NORMAL_MOVES), max_actions=400)
+    assert result.won
+    assert agent.resets >= 1
+
+
+def test_the_relearned_mapping_matches_the_new_controls():
+    agent = NavigatorAgent()
+    run_episode(agent, SwitchingEnvironment(moves=NORMAL_MOVES), max_actions=400)
+    mapping = agent.control.mapping()
+    assert mapping.get(GameAction.ACTION1) == FLIPPED_MOVES[GameAction.ACTION1]
+
+
+def test_a_working_mapping_is_never_discarded():
+    """Discarding on noise would throw away good evidence and re-probe for free."""
+    agent = NavigatorAgent()
+    result = run_episode(agent)
+    assert result.won
+    assert agent.resets == 0
+
+
+def test_recovery_costs_actions_but_still_finishes():
+    steady = run_episode(NavigatorAgent())
+    switching = run_episode(
+        NavigatorAgent(), SwitchingEnvironment(moves=NORMAL_MOVES), max_actions=400
+    )
+    assert switching.won
+    assert switching.actions_used > steady.actions_used
+
+
+def test_walls_learned_before_a_reset_are_kept():
+    """Obstacles do not stop being obstacles because the controls were misread."""
+    agent = NavigatorAgent()
+    run_episode(agent, maze(), max_actions=200)
+    blocked_before = set(agent.obstacles.blocked)
+    agent._predictions.extend([False] * 8)
+    agent._expected = (0, 0)
+    agent._check_prediction([[0]])
+    assert agent.resets == 1
+    assert set(agent.obstacles.blocked) == blocked_before

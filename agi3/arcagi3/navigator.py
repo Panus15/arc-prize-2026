@@ -14,7 +14,7 @@ scorecard counts for nothing.
 
 from __future__ import annotations
 
-from collections import Counter
+from collections import Counter, deque
 
 from arcengine import FrameData, GameAction
 
@@ -24,8 +24,19 @@ from arcagi3.control import ControlLearner
 from arcagi3.navigation import ObstacleModel, find_path
 from arcagi3.perception import segment
 
-# Above this, the measured mapping accuracy is 91% rather than 79%.
-TRUST_THRESHOLD = 0.65
+# Measured across 500 recorded runs: below 0.6 the learned mapping is 36%
+# accurate, just above it 84%, and the top band only 85% — so the cliff is at
+# 0.6 and waiting for more buys accuracy that is not there. See
+# docs/control-learning-curve.md.
+TRUST_THRESHOLD = 0.6
+
+# How many recent predictions to judge the mapping by, and how many of them may
+# fail before it is discarded. One miss is ordinary — something blocked the way,
+# or the level changed under us — but a map that keeps mispredicting is worse
+# than none: the agent follows it and spends actions the scorecard counts. One
+# recorded game produced a mapping on all 20 passes and was wrong on every one.
+PREDICTION_WINDOW = 8
+MIN_PREDICTION_HITS = 3
 
 Grid = list[list[int]]
 Cell = tuple[int, int]
@@ -49,6 +60,9 @@ class NavigatorAgent(BaseAgent):
         self._before: Grid | None = None
         self._pending: GameAction | None = None
         self._tried: Counter[GameAction] = Counter()
+        self._predictions: deque[bool] = deque(maxlen=PREDICTION_WINDOW)
+        self._expected: Cell | None = None
+        self.resets = 0
 
     def choose_action(self, frames: list[FrameData], latest: FrameData) -> GameAction:
         board = latest.frame[0]
@@ -79,6 +93,7 @@ class NavigatorAgent(BaseAgent):
         self._pending = None
 
         if action not in (GameAction.RESET, self._interact):
+            self._check_prediction(board)
             self.control.observe(before, board, action)
             self._note_obstacle(before, board, action)
 
@@ -109,6 +124,26 @@ class NavigatorAgent(BaseAgent):
                 self.obstacles.record_passable(colour)
             else:
                 self.obstacles.record_blocked(colour)
+
+    def _check_prediction(self, board: Grid) -> None:
+        """Hold the mapping to account, and abandon it when it stops paying out."""
+        if self._expected is None:
+            return
+        expected, self._expected = self._expected, None
+        self._predictions.append(self._player_cell(board) == expected)
+
+        if len(self._predictions) < PREDICTION_WINDOW:
+            return
+        if sum(self._predictions) >= MIN_PREDICTION_HITS:
+            return
+
+        # The map does not describe this game. Keep what was learned about
+        # walls — obstacles do not stop being obstacles because the controls
+        # were misread — and learn the controls again from nothing.
+        self.control = ControlLearner()
+        self._predictions.clear()
+        self._tried.clear()
+        self.resets += 1
 
     def _note_obstacle(self, before: Grid, after: Grid, action: GameAction) -> None:
         """A refused move names what is in the way.
@@ -197,7 +232,16 @@ class NavigatorAgent(BaseAgent):
         self._before = [row[:] for row in board]
         self._pending = action
         self._tried[action] += 1
+        self._expected = self._predict(board, action)
         return action
+
+    def _predict(self, board: Grid, action: GameAction) -> Cell | None:
+        """Where the mapping says the player will be after `action`."""
+        step = self.control.mapping().get(action)
+        player = self._player_cell(board)
+        if step is None or player is None:
+            return None
+        return player[0] + step[0], player[1] + step[1]
 
 
 def _colours(board: Grid) -> set[int]:
