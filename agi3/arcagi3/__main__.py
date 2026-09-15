@@ -7,6 +7,8 @@ import sys
 
 from arcagi3.agent import BaseAgent, GreedyAgent, RandomAgent
 from arcagi3.budget import run_episode
+from arcagi3.click_mock import ClickEnvironment
+from arcagi3.clicker import ClickAgent
 from arcagi3.explorer import ExplorerAgent
 from arcagi3.navigator import NavigatorAgent
 
@@ -15,6 +17,7 @@ AGENTS: dict[str, type[BaseAgent]] = {
     "greedy": GreedyAgent,
     "explorer": ExplorerAgent,
     "navigator": NavigatorAgent,
+    "clicker": ClickAgent,
 }
 
 
@@ -22,7 +25,10 @@ def _play(args: argparse.Namespace) -> int:
     names = list(AGENTS) if args.agent == "all" else [args.agent]
     for name in names:
         agent = AGENTS[name](args.seed) if name == "random" else AGENTS[name]()
-        print(run_episode(agent, max_actions=args.max_actions).summary())
+        # The clicker plays the click-driven games; the walkers cannot, and it
+        # cannot play theirs, so each is run against the board it is built for.
+        env = ClickEnvironment() if name == "clicker" else None
+        print(run_episode(agent, env, max_actions=args.max_actions).summary())
     return 0
 
 
