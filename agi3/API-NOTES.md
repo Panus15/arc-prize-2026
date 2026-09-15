@@ -23,7 +23,7 @@ NOT_PLAYED, NOT_FINISHED, WIN, GAME_OVER
 | field | type | หมายเหตุ |
 |---|---|---|
 | `game_id` | `str` | |
-| `frame` | `list[list[list[int]]]` | **3 ชั้น** — เป็น stack ของ grid 2D ไม่ใช่ grid เดียว |
+| `frame` | `list[list[list[int]]]` | **stack ของ grid 2D** — ดูข้อ 6 ด้านล่าง อ่านเลเยอร์**สุดท้าย** ไม่ใช่ index 0 |
 | `state` | `GameState` | |
 | `levels_completed` | `int` | เดิมชื่อ `score` เปลี่ยนชื่อใน 0.9.3 (breaking change) |
 | `win_levels` | `int` | |
@@ -54,7 +54,7 @@ uv run main.py --agent=random --game=ls20
 
 ## ผลต่อการออกแบบ
 
-- `frame` เป็น 3 ชั้น → ต้องรู้ว่าแต่ละชั้นคืออะไรก่อนเขียน perception layer
+- `frame` เป็น stack → ต้องอ่านเลเยอร์สุดท้าย (ดูข้อ 6)
 - `available_actions` เปลี่ยนได้ทุกเฟรม → policy ต้องอ่านค่านี้ ไม่ใช่ hard-code
 - scoring ลงโทษ action เกินจำเป็นแบบกำลังสอง แต่ internal reasoning ฟรี
   → คุ้มที่จะคิดเยอะก่อนกด 1 ครั้ง มากกว่ากดลองหลายครั้ง
@@ -148,3 +148,42 @@ intentionally not exposed") แต่ให้ **segmentation** แทน:
 - board จริงคือ **64×64**
 - `WIN` = จบทั้งเกม ส่วนการผ่าน level กลางทางจะเห็นเป็น **คะแนนเพิ่มขึ้นแต่เกมยังเล่นต่อ**
 - **อย่าสมมติว่ามีตัวละครให้บังคับ** บางเกมไม่มี player avatar เลย
+
+### 6. 🔴 `frame` คือ "ภาพเคลื่อนไหว" ไม่ใช่ "เลเยอร์" — อ่านตัวสุดท้าย
+
+ตรวจจาก source ของ `arcengine.base_game.ARCBaseGame.perform_action`:
+
+```python
+while not self.is_action_complete():
+    ...
+    frame = self.camera.render(self.current_level.get_sprites())
+    frame_list.append(frame.tolist())
+```
+
+**engine วาดภาพหนึ่งครั้งต่อ 1 step ของ action ที่ยังทำงานไม่จบ แล้วต่อท้ายเข้า list**
+ดังนั้น:
+
+- `frame[0]` = ภาพ**ระหว่างทาง** ของ action ที่ยังไม่นิ่ง
+- **`frame[-1]` = กระดานที่นิ่งแล้ว ซึ่งเป็นตัวที่ action ถัดไปจะกระทำต่อ**
+
+> ⚠️ **แก้สมมติฐานเดิม** — บันทึกฉบับแรกเขียนว่า "อ่าน index 0" ซึ่ง**ผิด**
+> `sdk_adapter.normalise_frame()` ยุบ stack ให้เหลือกระดานที่นิ่งแล้วก่อนส่งให้ policy
+> ทำให้ policy ที่เขียนไว้เดิม (ซึ่งอ่าน `frame[0]`) ยังทำงานถูกต้องโดยไม่ต้องแก้
+
+ข้อนี้อ่านจาก engine ที่รันในเครื่อง — **ยังไม่ได้ยืนยันกับ server จริง**
+
+### 7. ACTION6 ส่ง payload ผ่าน `set_data` บนตัว enum
+
+```python
+action = GameAction.ACTION6
+action.set_data({"x": col, "y": row})   # x = คอลัมน์, y = แถว
+```
+
+`get_pixels` ใน engine slice แบบ `frame[y:y+h, x:x+w]` → **y คือแถว, x คือคอลัมน์**
+payload ติดอยู่กับ enum member ที่ใช้ร่วมกันทั้ง process ซึ่งเป็นสัญญาของ SDK เอง
+(`do_action_request` อ่าน `action.action_data` จาก member ที่ agent คืนมา)
+
+### 8. `frame=[]` เป็นสถานะปกติ
+
+engine คืน `frame=[]` ตอน WIN และ GAME_OVER และ SDK ใส่ `FrameData` เปล่าไว้เป็นเฟรมแรก
+→ **"ไม่มีกระดาน" ไม่ใช่ข้อมูลเสีย** ต้องรองรับ ไม่ใช่ crash
