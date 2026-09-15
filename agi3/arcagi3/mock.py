@@ -40,12 +40,31 @@ class Level:
     def optimal_actions(self) -> int:
         """Fewest actions that can finish this level: the walk, plus one interact.
 
-        Valid only while no wall blocks the L-shaped path, which holds for the
-        levels defined below. It is the baseline efficiency is measured against.
+        Measured by shortest-path search rather than Manhattan distance, so a
+        level whose walls force a detour reports a baseline a perfect player
+        could actually achieve. Getting this wrong would quietly overstate every
+        efficiency figure on any level with obstacles.
         """
-        dy = abs(self.target[0] - self.start[0])
-        dx = abs(self.target[1] - self.start[1])
-        return dy + dx + 1
+        return self._shortest_walk() + 1
+
+    def _shortest_walk(self) -> int:
+        from collections import deque
+
+        seen = {self.start}
+        queue = deque([(self.start, 0)])
+        while queue:
+            (r, c), steps = queue.popleft()
+            if (r, c) == self.target:
+                return steps
+            for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                nxt = (r + dr, c + dc)
+                if nxt in seen or nxt in self.walls:
+                    continue
+                if not (0 <= nxt[0] < self.height and 0 <= nxt[1] < self.width):
+                    continue
+                seen.add(nxt)
+                queue.append((nxt, steps + 1))
+        raise ValueError(f"level target {self.target} is unreachable from {self.start}")
 
 
 LEVELS: tuple[Level, ...] = (
