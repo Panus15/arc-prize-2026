@@ -7,6 +7,7 @@ both, and the ratio between them, which is the number a policy has to move.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from arcengine import FrameData, GameState
@@ -56,12 +57,18 @@ def run_episode(
     env: MockEnvironment | None = None,
     *,
     max_actions: int = 500,
+    should_stop: Callable[[int, int], bool] | None = None,
 ) -> RunResult:
     """Play one episode, stopping at a win, a loss, or `max_actions`.
 
     The cap exists because a policy that never reaches the target would
     otherwise loop forever; hitting it is reported as `truncated` rather than
     being quietly folded into a loss.
+
+    `should_stop(actions_used, levels_completed)` lets a caller give up early on
+    a game that is going nowhere. Competition mode scores every environment
+    whether or not it was played and allows one interaction each, so actions
+    poured into a hopeless game are actions another game never gets.
     """
     env = env or MockEnvironment()
     latest: FrameData = env.reset()
@@ -70,6 +77,9 @@ def run_episode(
 
     while not agent.is_done(frames, latest):
         if env.actions_used >= max_actions:
+            truncated = True
+            break
+        if should_stop is not None and should_stop(env.actions_used, latest.levels_completed):
             truncated = True
             break
         latest = env.step(agent.act(frames, latest))
