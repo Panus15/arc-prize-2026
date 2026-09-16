@@ -23,6 +23,11 @@ from arcagi3.sdk_adapter import mouse_action
 
 Cell = tuple[int, int]
 
+# How much a completed level outweighs a click that did nothing. Levels are the
+# only discriminating signal and arrive at about 1% of clicks, so one has to be
+# worth more than a handful of dead ends.
+LEVEL_REWARD = 3
+
 
 class ClickAgent(BaseAgent):
     """Clicks objects, learns which colours answer, then clicks those."""
@@ -72,16 +77,17 @@ class ClickAgent(BaseAgent):
         previous = self._before
         self._before, self._target_colour = None, None
 
-        # A completed level is the strongest possible signal, and it arrives on a
-        # board that has already been replaced — so check it before comparing.
+        # A completed level is the only positive evidence worth having, and it
+        # arrives on a board that has already been replaced — so check it first.
         if levels_completed > self._levels_seen:
             self._levels_seen = levels_completed
-            self._responsive[colour] += 2
+            self._responsive[colour] += LEVEL_REWARD
             return
-        if board != previous:
-            self._responsive[colour] += 1
-        else:
+        if board == previous:
+            # Nothing at all happened. Rare in the real games, but where it does
+            # happen it is the cheapest negative evidence available.
             self._inert[colour] += 1
+        # A board that merely changed says nothing: nearly every click does that.
 
     def _score(self, colour: int) -> int:
         return self._responsive[colour] - self._inert[colour]
