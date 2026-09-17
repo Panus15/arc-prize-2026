@@ -163,8 +163,16 @@ def test_walls_learned_before_a_reset_are_kept():
     agent = NavigatorAgent()
     run_episode(agent, maze(), max_actions=200)
     blocked_before = set(agent.obstacles.blocked)
-    agent._predictions.extend([False] * 8)
-    agent._expected = (0, 0)
-    agent._check_prediction([[0]])
+    assert blocked_before, "the maze should have taught it at least one wall"
+
+    # Drive the mapping into disrepute: every recent prediction pointed the
+    # wrong way. The board has to contain the controlled colour, since a frame
+    # the player cannot be found on carries no verdict either way.
+    colour = agent.control.controlled_colour()
+    board = [[0, 0, 0], [0, colour, 0], [0, 0, 0]]
+    agent._predictions.extend([False] * 7)
+    agent._expected = ((5, 5), (4, 5))  # predicted upward, player did not follow
+    agent._check_prediction(board)
+
     assert agent.resets == 1
     assert set(agent.obstacles.blocked) == blocked_before

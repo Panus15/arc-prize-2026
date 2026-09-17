@@ -18,6 +18,7 @@ mappings, and gets every mapping right in 11 of 17 games where the method fires.
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+from collections.abc import Collection
 from dataclasses import dataclass, field
 
 from arcengine import GameAction
@@ -138,11 +139,38 @@ class ControlLearner:
         return found[2] if found else 0.0
 
     def action_for(self, direction: Delta) -> GameAction | None:
-        """Which action pushes the controlled colour `direction`, if any."""
+        """Which action pushes the controlled colour exactly `direction`, if any."""
         for action, delta in self.mapping().items():
             if delta == direction:
                 return action
         return None
+
+    def best_action_for(
+        self, direction: Delta, allowed: Collection[GameAction] | None = None
+    ) -> GameAction | None:
+        """The action that moves furthest along `direction`, exact or not.
+
+        Insisting on an exact match fails as soon as an effect is not a clean
+        cardinal step, and on a real board it often is not: a sprite that
+        animates asymmetrically drags its colour's centroid sideways as it
+        moves, so pressing down is learned as down-and-right. Scoring by how
+        much of the wanted direction an action actually delivers keeps such a
+        mapping usable, and reduces to the exact match when the effects are
+        clean. Ties break by action value so play stays reproducible.
+        """
+        best: tuple[int, int, GameAction] | None = None
+        for action, delta in self.mapping().items():
+            if allowed is not None and action not in allowed:
+                continue
+            progress = delta[0] * direction[0] + delta[1] * direction[1]
+            if progress <= 0:
+                continue  # sideways or backwards is not progress
+            drift = abs(delta[0] * direction[1] - delta[1] * direction[0])
+            # Most progress first, then least sideways drift, then lowest value.
+            candidate = (-progress, drift, action.value)
+            if best is None or candidate < (-best[0], best[1], best[2].value):
+                best = (progress, drift, action)
+        return best[2] if best else None
 
     def summary(self) -> str:
         found = self.candidate()

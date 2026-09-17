@@ -61,7 +61,7 @@ class NavigatorAgent(BaseAgent):
         self._pending: GameAction | None = None
         self._tried: Counter[GameAction] = Counter()
         self._predictions: deque[bool] = deque(maxlen=PREDICTION_WINDOW)
-        self._expected: Cell | None = None
+        self._expected: tuple[Cell, Cell] | None = None
         self.resets = 0
 
     def choose_action(self, frames: list[FrameData], latest: FrameData) -> GameAction:
@@ -126,11 +126,26 @@ class NavigatorAgent(BaseAgent):
                 self.obstacles.record_blocked(colour)
 
     def _check_prediction(self, board: Grid) -> None:
-        """Hold the mapping to account, and abandon it when it stops paying out."""
+        """Hold the mapping to account, and abandon it when it stops paying out.
+
+        The test is whether the player moved the way the map said, not whether
+        it landed on the exact square. An animating sprite drags its centroid
+        sideways, so a map that is entirely correct still misses the square by a
+        cell most of the time — judging on exact position discards good maps
+        constantly. Direction still catches the failure this exists for: a map
+        that does not describe the game sends the player the wrong way, which
+        scores no progress at all.
+        """
         if self._expected is None:
             return
-        expected, self._expected = self._expected, None
-        self._predictions.append(self._player_cell(board) == expected)
+        (before, predicted), self._expected = self._expected, None
+        actual = self._player_cell(board)
+        if actual is None:
+            return
+        wanted = (predicted[0] - before[0], predicted[1] - before[1])
+        moved = (actual[0] - before[0], actual[1] - before[1])
+        progress = wanted[0] * moved[0] + wanted[1] * moved[1]
+        self._predictions.append(progress > 0)
 
         if len(self._predictions) < PREDICTION_WINDOW:
             return
@@ -193,18 +208,33 @@ class NavigatorAgent(BaseAgent):
         path = find_path(board, player, goal, self.obstacles)
         if not path:
             return None
-        action = self.control.action_for(path[0])
-        return action if action in movers else None
+        # Ask for the best available action along the next step rather than an
+        # exact match: a learned effect is not always a clean cardinal step.
+        return self.control.best_action_for(path[0], movers)
 
     def _player_cell(self, board: Grid) -> Cell | None:
+        """Where the controlled object is, as its centre of mass.
+
+        Taking the first matching cell breaks on a sprite that animates: it
+        occupies more than one cell and the extra one is sometimes scanned
+        first, so the reported position jumps by a cell for no reason. Routing
+        then plans from the wrong square and the prediction check reads the
+        mismatch as a broken mapping. The centroid is what the control learner
+        already tracks, so using it here keeps the two consistent.
+        """
         colour = self.control.controlled_colour()
         if colour is None:
             return None
+        rows = cols = count = 0
         for r, row in enumerate(board):
             for c, value in enumerate(row):
                 if value == colour:
-                    return r, c
-        return None
+                    rows += r
+                    cols += c
+                    count += 1
+        if count == 0:
+            return None
+        return round(rows / count), round(cols / count)
 
     def _goal_cell(self, board: Grid, player: Cell | None) -> Cell | None:
         if player is None:
@@ -235,13 +265,13 @@ class NavigatorAgent(BaseAgent):
         self._expected = self._predict(board, action)
         return action
 
-    def _predict(self, board: Grid, action: GameAction) -> Cell | None:
-        """Where the mapping says the player will be after `action`."""
+    def _predict(self, board: Grid, action: GameAction) -> tuple[Cell, Cell] | None:
+        """Where the player is now, and where the mapping says it will be."""
         step = self.control.mapping().get(action)
         player = self._player_cell(board)
         if step is None or player is None:
             return None
-        return player[0] + step[0], player[1] + step[1]
+        return player, (player[0] + step[0], player[1] + step[1])
 
 
 def _colours(board: Grid) -> set[int]:

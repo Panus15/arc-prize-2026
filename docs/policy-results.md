@@ -39,7 +39,17 @@
 > เหตุผลที่ต้องมี policy สายนี้: 8 จาก 25 เกมจริงไม่เคยรับปุ่มทิศทางเลย
 > และ `ft09` ซึ่งผู้ชนะทำคะแนนสูงสุดก็เป็นเกม click — ดู `control-learning-curve.md` §4.1
 
-### 1.4 หมายเหตุเรื่อง baseline
+### 1.4 🔴 เมื่อเจอ noise แบบเกมจริง
+
+| agent | mock สะอาด | **mock ที่มี noise** |
+|---|---|---|
+| `greedy` (hardcode) | WIN 3/3 | **WIN 3/3** |
+| `explorer` | WIN 3/3 | ❌ **0/3** |
+| `navigator` | WIN 3/3 | ❌ **0/3** |
+
+**policy ที่เรียนรู้เองไม่รอดทั้งคู่** รายละเอียดและการวินิจฉัย: [`noise-validation.md`](noise-validation.md)
+
+### 1.5 หมายเหตุเรื่อง baseline
 
 ตอนแรก `Level.optimal_actions` คิดจากระยะ Manhattan ซึ่ง**ผิด**เมื่อมีกำแพง —
 ด่านกำแพงจะรายงาน baseline = 7 ทั้งที่ทางสั้นสุดจริงคือ 19 ทำให้ efficiency ทุกค่าสูงเกินจริง
