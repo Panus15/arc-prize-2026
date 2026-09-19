@@ -159,3 +159,63 @@ def test_empty_boards_are_ignored_rather_than_crashing():
     learner = ControlLearner()
     learner.observe([], [], GameAction.ACTION1)
     assert learner.samples == 0
+
+
+# --- the two displacement estimators ---------------------------------------
+
+
+def cells(*positions: tuple[int, int]) -> set[tuple[int, int]]:
+    return set(positions)
+
+
+def test_overlap_finds_a_plain_translation():
+    from arcagi3.control import overlap_displacement
+
+    assert overlap_displacement(cells((1, 1), (1, 2)), cells((1, 3), (1, 4))) == (0, 2)
+
+
+def test_overlap_is_unmoved_by_a_sprite_growing_a_cell():
+    """The case that makes a centroid report a diagonal for a straight move."""
+    from arcagi3.control import overlap_displacement
+
+    before = cells((2, 2))
+    after = cells((3, 2), (3, 3))  # moved down, and animated sideways
+    assert overlap_displacement(before, after) == (1, 0)
+
+
+def test_overlap_prefers_a_real_move_to_standing_still_on_a_tie():
+    """An action was taken; 'nothing moved' has to be the only explanation."""
+    from arcagi3.control import overlap_displacement
+
+    before = cells((0, 1), (0, 2))
+    after = cells((0, 2))
+    assert overlap_displacement(before, after) == (0, 1)
+
+
+def test_overlap_reports_nothing_when_no_shift_lines_up():
+    from arcagi3.control import overlap_displacement
+
+    assert overlap_displacement(cells((0, 0)), cells((9, 9))) is None
+
+
+def test_overlap_handles_an_empty_side():
+    from arcagi3.control import overlap_displacement
+
+    assert overlap_displacement(set(), cells((0, 0))) is None
+    assert overlap_displacement(cells((0, 0)), set()) is None
+
+
+def test_the_estimator_is_selectable_and_defaults_to_centroid():
+    """Default set by recorded real boards, not by which idea is nicer."""
+    assert ControlLearner().estimator == "centroid"
+    assert ControlLearner(estimator="overlap").estimator == "overlap"
+
+
+def test_both_estimators_learn_a_clean_board():
+    for estimator in ("centroid", "overlap"):
+        learner = ControlLearner(estimator=estimator)
+        for c in range(4):
+            learner.observe(board((2, c)), board((2, c + 1)), GameAction.ACTION4)
+            learner.observe(board((4, c)), board((5, c)), GameAction.ACTION2)
+        assert learner.mapping()[GameAction.ACTION4] == (0, 1), estimator
+        assert learner.mapping()[GameAction.ACTION2] == (1, 0), estimator

@@ -109,3 +109,26 @@ def test_the_same_policies_do_clear_the_quiet_mock():
     """The contrast that makes the previous test mean something."""
     for agent in (ExplorerAgent(), NavigatorAgent()):
         assert run_episode(agent, MockEnvironment(), max_actions=400).won
+
+
+def test_the_overlap_estimator_rescues_the_policy_on_this_mock():
+    """And yet it is not the default — see docs/estimator-comparison.md.
+
+    On this mock the overlap estimator recovers the controls exactly and the
+    policy clears every level, where the centroid reports diagonals and it
+    clears none. On recorded real boards the ranking reverses, 55% against 79%,
+    so the default follows the real data. This test records that the mock
+    result is genuine, not that the estimator is better.
+    """
+    import arcagi3.navigator as navigator_module
+    from arcagi3.control import ControlLearner
+
+    agent = NavigatorAgent()
+    agent.control = ControlLearner(estimator="overlap")
+    original = navigator_module.ControlLearner
+    navigator_module.ControlLearner = lambda: ControlLearner(estimator="overlap")
+    try:
+        result = run_episode(agent, NoisyEnvironment(), max_actions=400)
+    finally:
+        navigator_module.ControlLearner = original
+    assert result.won
