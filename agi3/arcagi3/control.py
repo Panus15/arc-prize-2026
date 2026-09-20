@@ -118,7 +118,9 @@ class ControlLearner:
 
     max_sprite_share: float = MAX_SPRITE_SHARE
     min_observations: int = MIN_OBSERVATIONS
-    #: "centroid" tracks the colour's centre of mass; "overlap" aligns its cells.
+    #: How displacement is measured: "centroid" tracks the colour's centre of
+    #: mass, "overlap" aligns its cells, "fallback" aligns cells and falls back
+    #: to the centroid when alignment finds nothing.
     #:
     #: The default is centroid because recorded real boards say so, not because
     #: it is the better idea. On our noise-calibrated mock overlap is decisively
@@ -158,12 +160,29 @@ class ControlLearner:
 
         start_cells = colour_cells(before)
         end_cells = colour_cells(after)
+        # "fallback" needs both views, so compute centroids only when asked for.
+        start_mass = colour_centroids(before) if self.estimator == "fallback" else {}
+        end_mass = colour_centroids(after) if self.estimator == "fallback" else {}
+
         for colour in start_cells.keys() & end_cells.keys():
             if len(start_cells[colour]) > limit:
                 continue  # scenery
             delta = overlap_displacement(start_cells[colour], end_cells[colour])
-            if delta is not None:
-                self._votes[colour][action][direction_of(delta)] += 1
+            direction = direction_of(delta) if delta is not None else None
+
+            if direction is None and self.estimator == "fallback":
+                # Cell alignment found nothing to line up — the shape changed too
+                # much. The centre of mass still has an opinion, and a weak
+                # reading beats discarding the observation.
+                if colour in start_mass and colour in end_mass:
+                    drift = (
+                        end_mass[colour][0] - start_mass[colour][0],
+                        end_mass[colour][1] - start_mass[colour][1],
+                    )
+                    direction = direction_of(drift)
+
+            if direction is not None:
+                self._votes[colour][action][direction] += 1
 
     def candidate(self) -> tuple[int, dict[GameAction, Delta], float] | None:
         """The colour that best behaves like the thing under our control.

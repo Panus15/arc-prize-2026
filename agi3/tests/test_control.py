@@ -219,3 +219,36 @@ def test_both_estimators_learn_a_clean_board():
             learner.observe(board((4, c)), board((5, c)), GameAction.ACTION2)
         assert learner.mapping()[GameAction.ACTION4] == (0, 1), estimator
         assert learner.mapping()[GameAction.ACTION2] == (1, 0), estimator
+
+
+def test_fallback_uses_the_centroid_when_alignment_finds_nothing():
+    """The estimator that plays a noisy board without giving up real accuracy.
+
+    Overlap alone discards an observation whenever no shift lines the cells up,
+    which on real frames throws away most of the evidence. Falling back to the
+    centre of mass keeps a weak reading instead of none.
+    """
+    learner = ControlLearner(estimator="fallback")
+    for c in range(4):
+        learner.observe(board((2, c)), board((2, c + 1)), GameAction.ACTION4)
+        learner.observe(board((4, c)), board((5, c)), GameAction.ACTION2)
+    assert learner.mapping()[GameAction.ACTION4] == (0, 1)
+    assert learner.mapping()[GameAction.ACTION2] == (1, 0)
+
+
+def test_fallback_keeps_an_observation_overlap_would_discard():
+    """A shape that shares no cell with its successor still has a direction."""
+    overlap_only = ControlLearner(estimator="overlap")
+    with_fallback = ControlLearner(estimator="fallback")
+    # Jumps further than the alignment search looks, so nothing overlaps.
+    for _ in range(4):
+        overlap_only.observe(board((0, 0)), board((7, 0)), GameAction.ACTION2)
+        with_fallback.observe(board((0, 0)), board((7, 0)), GameAction.ACTION2)
+    assert overlap_only.samples == with_fallback.samples
+    assert not overlap_only._votes[PLAYER][GameAction.ACTION2]
+    assert with_fallback._votes[PLAYER][GameAction.ACTION2]
+
+
+def test_every_estimator_is_selectable():
+    for estimator in ("centroid", "overlap", "fallback"):
+        assert ControlLearner(estimator=estimator).estimator == estimator
