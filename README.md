@@ -16,7 +16,8 @@
 | **ARC-AGI-3 agent** | ✅ 19 โมดูล · **196 เทสผ่าน** → `agi3/` |
 | **Paper Track writeup** | 🟡 §2–8 ครบ (1,432 คำ) · §1 ปิดท้าย + §8 รอผลเกมสด |
 | **cover image + public notebook** | ✅ `paper/cover.png` · `paper/notebook.ipynb` (รันได้ไม่ต่อเน็ต) |
-| **เชื่อมเกมสด ARC-AGI-3** | ⛔ **ยังไม่เคยเชื่อม** — container นี้ต่อ `arcprize.org` ไม่ได้ |
+| **เชื่อมเกมสด ARC-AGI-3** | ⛔ **ยังไม่เคยเชื่อม** — container นี้ต่อ `arcprize.org` ไม่ได้ · คู่มือรันเองอยู่ที่ [`docs/live-run.md`](docs/live-run.md) |
+| **สิทธิ์เข้าแข่ง (ผู้เยาว์)** | ⛔ ต้องถาม Sponsor · ร่างอีเมลพร้อมส่งที่ [`docs/eligibility-minor.md`](docs/eligibility-minor.md) |
 
 แผนงานเต็ม สิ่งที่ทำแล้วพร้อมผล และสิ่งที่เหลือ: [`docs/ROADMAP.md`](docs/ROADMAP.md)
 
