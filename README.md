@@ -80,7 +80,9 @@ pytest
 1. **Internet ปิดระหว่าง scoring** → solver ที่เรียก LLM API ภายนอก **ส่งไม่ได้**
 2. **Python 3.12 บังคับ** (ส่วน `arc2/` ใช้ 3.11 ได้ แต่ `agi3/` ต้อง 3.12)
 3. **ต้อง open source แบบ CC0 หรือ MIT-0** — repo นี้ใช้ **MIT-0** (ดู `LICENSE`) — **MIT-0 ≠ MIT**
-4. **ผู้เข้าแข่งที่เป็นผู้เยาว์** ต้องมี parental/guardian consent และถ้าชนะ ผู้ปกครองต้องลงนามภายใน 7 วัน
+4. **ผู้เข้าแข่งที่เป็นผู้เยาว์** — เกณฑ์อายุของไทยคือ **20 ปี ไม่ใช่ 18** และต้องได้
+   **ทั้ง Sponsor agreement และ guardian consent ก่อน entry deadline** ไม่ใช่ตอนชนะ
+   → [`docs/eligibility-minor.md`](docs/eligibility-minor.md) มี checklist และร่างอีเมลพร้อมส่ง
 
 ที่มาของทุกข้อพร้อม URL: [`docs/competition-brief.md`](docs/competition-brief.md)
 (เป็นงานค้นคว้าอัตโนมัติ — ข้อ 1 กับ 4 ควรยืนยันกับหน้ากติกา Kaggle ด้วยตัวเองก่อนพึ่งพา)
