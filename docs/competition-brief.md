@@ -1,7 +1,8 @@
 # ARC Prize 2026 — Competition Brief
 
 **วันที่ retrieve ข้อมูลทั้งหมดในเอกสารนี้: 2026-09-10** (ทุก section ใช้วันนี้ เว้นแต่ระบุไว้เป็นอย่างอื่น)
-**เหลือเวลาถึง final submission deadline (2 พ.ย. 2026): ~53 วัน | ถึง paper deadline (10 พ.ย. 2026 06:59 GMT+7): ~61 วัน**
+**ยืนยันซ้ำบางข้อเมื่อ 2026-09-23 — ดู §2.6**
+**นับถึง 23 ก.ย.: milestone #2 (30 ก.ย.) เหลือ 7 วัน · paper deadline (10 พ.ย. 06:59 GMT+7) เหลือ 47 วัน**
 
 ---
 
@@ -273,6 +274,32 @@ class MyAgent(Agent):
 - ผู้เข้าแข่งระบุ "8 พ.ย." → **ไม่ตรงกับแหล่งใด** ดู section 9
 
 **ขนาดทีม: 1–8 คน** ("individually or in a team of up to eight (8) members") [S] (https://www.kaggle.com/competitions/arc-prize-2026-paper-track)
+
+### 2.6 ⭐ ยืนยันซ้ำ 23 ก.ย. 2026 — ข้อที่เปลี่ยนวิธีทำงานจริง
+
+**วิธีที่ใช้ยืนยัน:** เปิดหน้าเว็บตรง ๆ ยัง block อยู่เหมือนเดิม (`arcprize.org`, `kaggle.com`
+→ CONNECT tunnel failed 403) แต่ **web search ทำงานได้** เพราะไม่ได้วิ่งผ่าน proxy ของ container
+ข้อล่างนี้จึงมาจากผลค้นที่อ้างสองหน้านั้น **ไม่ใช่การอ่านหน้าจริง** — ยังเป็น [S] แต่แหล่งอิสระตรงกันหลายที่
+
+| # | สิ่งที่ยืนยันได้ | ทำไมสำคัญ |
+|---|---|---|
+| 1 | **"should not exceed 1,500 words, with submissions over this limit subject to penalty"** | **เกินแล้วโดนหักคะแนนจริง** ไม่ใช่แค่คำแนะนำ → ต้องนับคำทุกครั้ง |
+| 2 | **"In the event of a tie, the Paper that was entered first to the Competition will be the winner"** | **ส่งเร็ว = ได้เปรียบตอนคะแนนเท่ากัน** → ไม่ควรรอถึงวันสุดท้าย |
+| 3 | **"Your Paper rubric evaluation will not be shared with you"** | ไม่มี feedback loop — ส่งแล้วแก้ตามคำติไม่ได้ ต้องถูกตั้งแต่ครั้งแรก |
+| 4 | **"the code submission need not achieve a high score for the corresponding paper to be eligible"** | **มีสิทธิ์ส่ง ≠ ได้คะแนน Accuracy** — คะแนนต่ำยังส่งได้ แต่ Accuracy จะต่ำตาม |
+| 5 | **"papers scoring above 4.5 on the paper rubric are awarded at host discretion"** | กอง $375K **ไม่ได้เป็นกลไกอัตโนมัติล้วน** — มี discretion ของเจ้าภาพร่วมด้วย |
+| 6 | **"A cover image is required to submit your writeup"** | cover image **บังคับ** ไม่ใช่ของแถม (ทำแล้ว — `paper/cover.png`) |
+| 7 | **"assets must be attached to the writeup to be eligible"** | รูป/วิดีโอต้องแนบกับ writeup ไม่ใช่แค่ลิงก์ไว้ |
+| 8 | **Final Submission Deadline = 9 พ.ย. 2026** · "all deadlines are at 11:59 PM UTC" | ตรงกับที่ §2.5 สรุปไว้ ไม่ต้องแก้ |
+| 9 | private Kaggle notebook จะถูก **เปิดสาธารณะอัตโนมัติหลัง deadline** | ไม่ต้องกลัวเปิดโค้ดเร็วเกินไป แต่ก็เลี่ยงไม่ได้ |
+
+**ข้อ 4 แก้ความเข้าใจของเราเอง:** เดิมเขียนไว้เหมือนว่าคะแนนต่ำ = หมดสิทธิ์ ที่จริงคือ
+**ยังส่งได้ แต่ Accuracy จะได้น้อย** ซึ่งพอถ่วงน้ำหนักเท่ากัน 6 ข้อแล้วก็ยังดึงค่าเฉลี่ย
+ให้ต่ำกว่า 4.5 อยู่ดี — ข้อสรุปเชิงปฏิบัติไม่เปลี่ยน แต่เหตุผลไม่เหมือนกัน ต้องเขียนให้ตรง
+
+**ข้อ 2 เปลี่ยนแผนจริง:** เดิมตั้งใจใช้เวลาถึงใกล้ ๆ deadline ตอนนี้ควร **ส่งให้เร็วที่สุด
+เท่าที่งานพร้อม** เพราะ tie-break เข้าข้างคนส่งก่อน และ §2.3 บอกว่า rubric เป็น 0–5 ขั้นหยาบ
+โอกาสคะแนนเท่ากันจึงสูงกว่าการแข่งที่ให้คะแนนละเอียด
 
 ---
 

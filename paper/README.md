@@ -4,14 +4,35 @@
 |---|---|
 | `writeup-draft.md` | ตัวเนื้อ writeup |
 | `notebook.ipynb` | public notebook — **รันได้โดยไม่ต่อเน็ต** ทดสอบรันครบทุกเซลล์แล้ว |
-| `cover.png` | ภาพหน้าปก — สร้างใหม่ได้ด้วย `python paper/make_cover.py` |
+| `cover.png` | ภาพหน้าปก (**บังคับ** ตามกติกา) — สร้างใหม่ได้ด้วย `python paper/make_cover.py` |
+| `wordcount.py` | นับคำแบบที่กรรมการนับ — **ต้องรันก่อนแก้ร่างทุกครั้ง** |
 | `make_cover.py` | สคริปต์วาดหน้าปก อ่านตัวเลขจากไฟล์ที่วัดไว้ ไม่มีเลขพิมพ์มือ |
 | `data/control-learning-measured.json` | ผลที่วัดจาก trace 500 ไฟล์ (8 KB) ฝังมาเพราะ trace จริง 2.8 GB |
 | `data/simulation-gap-measured.json` | ตารางช่องว่าง 2 สนาม ที่ `scripts/simulation_gap.py` เขียนไว้ |
 
 | ไฟล์ | สถานะ |
 |---|---|
-| `writeup-draft.md` | §2–8 เขียนครบ (**1,432 คำ**) · §1 ปิดท้าย และ §8 ท้ายสุด รอผลเกมสด |
+| `writeup-draft.md` | §2–8 เขียนครบ (**1,411 คำ** นับรวมตาราง) · §1 ปิดท้าย และ §8 ท้ายสุด รอผลเกมสด |
+
+## ⚠️ เพดาน 1,500 คำ — เกินแล้วโดนหักคะแนน
+
+กติกาเขียนว่า *"should not exceed 1,500 words, with submissions over this limit
+subject to penalty"* (ยืนยัน 23 ก.ย. — `docs/competition-brief.md` §2.6)
+
+```
+$ python paper/wordcount.py
+limit                    1500
+prose + headings         1378
+  ... including code      1411
+reserved for live result   70      ← §1 ปิดท้าย + §8 ผลเกมสด
+headroom (worst case)     +19
+```
+
+**ตัวเลข 1,432 ที่เคยรายงานไว้ผิด** — นับแต่ย่อหน้า ไม่ได้นับหัวข้อ ของจริงตอนนั้นคือ
+**1,504 คำ เกินเพดานไปแล้ว** ทั้งที่ยังไม่ได้เขียนอีก 70 คำที่ค้างอยู่
+ตัดไป 93 คำแล้ว (ที่ซ้ำกับส่วนอื่น ไม่ใช่เนื้อหาใหม่) จึงเหลือที่ว่างพอ
+
+**กติกา:** แก้ร่างเสร็จ → รัน `python paper/wordcount.py` → exit code ต้องเป็น 0
 
 ## โครงสร้างจัดตามเกณฑ์ให้คะแนน ไม่ใช่ตามลำดับเหตุการณ์
 
