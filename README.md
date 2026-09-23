@@ -10,35 +10,56 @@
 
 | ส่วน | สถานะ |
 |---|---|
-| ARC-AGI-2 loader + evaluation harness | ✅ เสร็จ — 122 เทสผ่าน |
-| ARC-AGI-2 rule baselines (14 ตัว) | ✅ วัดจริงแล้ว — ดู `docs/baselines.md` |
-| สถิติชุดข้อมูล | ✅ `docs/dataset-analysis.md` |
-| สืบกติกาการแข่ง | ✅ `docs/competition-brief.md` |
-| **ARC-AGI-3 agent** | ⬜ ยังไม่เริ่ม → `agi3/` |
-| **Paper Track writeup** | ⬜ ยังไม่เริ่ม |
+| ARC-AGI-2 loader + evaluation harness | ✅ เสร็จ |
+| ARC-AGI-2 rule baselines (14 ตัว) | ✅ วัดจริงแล้ว — `docs/baselines.md` |
+| สถิติชุดข้อมูล · สืบกติกา | ✅ `docs/dataset-analysis.md` · `docs/competition-brief.md` |
+| **ARC-AGI-3 agent** | ✅ 19 โมดูล · **196 เทสผ่าน** → `agi3/` |
+| **Paper Track writeup** | 🟡 §2–8 ครบ (1,432 คำ) · §1 ปิดท้าย + §8 รอผลเกมสด |
+| **cover image + public notebook** | ✅ `paper/cover.png` · `paper/notebook.ipynb` (รันได้ไม่ต่อเน็ต) |
+| **เชื่อมเกมสด ARC-AGI-3** | ⛔ **ยังไม่เคยเชื่อม** — container นี้ต่อ `arcprize.org` ไม่ได้ |
+
+แผนงานเต็ม สิ่งที่ทำแล้วพร้อมผล และสิ่งที่เหลือ: [`docs/ROADMAP.md`](docs/ROADMAP.md)
 
 ## ผลที่วัดได้แล้ว
 
-rule-based solver ทั้ง 14 ตัวได้ **0.00% บนชุด evaluation ของ ARC-AGI-2** (0 จาก 120 ข้อ)
+**ARC-AGI-3 — ช่องว่างระหว่างห้องทดลองกับสนามจริง** ([`docs/simulation-gap.md`](docs/simulation-gap.md))
+
+```
+policy       learns?      quiet mock    noise-calibrated mock
+-------------------------------------------------------------
+random            no     lost 2/3            lost 2/3
+greedy            no      WIN 3/3             WIN 3/3
+explorer         yes      WIN 3/3            lost 0/3
+navigator        yes      WIN 3/3            lost 0/3
+```
+
+**noise ทำลายเฉพาะวิธีที่เรียนรู้** — สองตัวที่ไม่เรียนรู้อะไรเลยให้ผลเท่าเดิมเป๊ะทั้งสองสนาม
+และบนกระดานที่มี noise **การสุ่มมั่วชนะ agent ที่ตั้งใจออกแบบทั้งสองตัวของเรา**
+สนามที่ทั้งสองตัวแพ้นั้น calibrate มาจากการรันจริง 500 ครั้ง — การตรงกับสถิติที่วัดได้
+จึงยังไม่พอจะทำให้ simulator เชื่อถือได้
+
+**ARC-AGI-2 — เส้นฐาน** ([`docs/baselines.md`](docs/baselines.md))
+
+rule-based solver ทั้ง 14 ตัวได้ **0.00% บนชุด evaluation** (0 จาก 120 ข้อ)
 ขณะที่ composite ได้ **7.70% บน training** (77 จาก 1000)
 
 ผลวินิจฉัยที่สำคัญกว่า: บน training กฎที่ fit ได้ตอบถูก **77/77 (100%)** แต่บน evaluation
 **ไม่มีกฎไหน fit ได้แม้แต่ข้อเดียว** — กฎไม่ได้ตอบผิด แต่ใช้ไม่ได้เลย
 แปลว่าการเพิ่มกฎแบบเดิมจะยังได้ 0% ต้องเปลี่ยนประเภทวิธี ไม่ใช่เพิ่มปริมาณ
 
-รายละเอียดและวิธีทำซ้ำ: [`docs/baselines.md`](docs/baselines.md)
-
 ## โครงสร้าง
 
 ```
 arc-prize-2026/
-├── docs/
-│   ├── ROADMAP.md            แผนงาน + กำหนดการ + ข้อจำกัดที่ต้องออกแบบรอบ
+├── docs/                     18 ไฟล์ — ทุกไฟล์มีตัวเลขที่วัดจริง + คำสั่งทำซ้ำ
+│   ├── ROADMAP.md            แผนงาน · สิ่งที่ทำแล้วและผล · สิ่งที่เหลือ  ← เริ่มอ่านที่นี่
+│   ├── simulation-gap.md     ผลหลักของโครงงาน
 │   ├── competition-brief.md  กติกาทั้ง 3 สนาม พร้อมแหล่งอ้างอิงรายข้อ
 │   ├── baselines.md          ผลวัด baseline จริง
 │   └── dataset-analysis.md   สถิติ ARC-AGI-2 ทั้ง 1,120 task
 ├── arc2/                     งาน ARC-AGI-2 (loader, harness, solvers, tests)
-└── agi3/                     ARC-AGI-3 agent — สนามหลัก
+├── agi3/                     ARC-AGI-3 agent — สนามหลัก (19 โมดูล · 196 เทส)
+└── paper/                    writeup · notebook · cover · ข้อมูลที่ฝังไปกับเปเปอร์
 ```
 
 ## เริ่มใช้งาน (ส่วน ARC-AGI-2)
