@@ -4,7 +4,10 @@
 |---|---|
 | `writeup-draft.md` | ตัวเนื้อ writeup |
 | `notebook.ipynb` | public notebook — **รันได้โดยไม่ต่อเน็ต** ทดสอบรันครบทุกเซลล์แล้ว |
+| `cover.png` | ภาพหน้าปก — สร้างใหม่ได้ด้วย `python paper/make_cover.py` |
+| `make_cover.py` | สคริปต์วาดหน้าปก อ่านตัวเลขจากไฟล์ที่วัดไว้ ไม่มีเลขพิมพ์มือ |
 | `data/control-learning-measured.json` | ผลที่วัดจาก trace 500 ไฟล์ (8 KB) ฝังมาเพราะ trace จริง 2.8 GB |
+| `data/simulation-gap-measured.json` | ตารางช่องว่าง 2 สนาม ที่ `scripts/simulation_gap.py` เขียนไว้ |
 
 | ไฟล์ | สถานะ |
 |---|---|
@@ -37,7 +40,8 @@
 - §6 ลิงก์ repo + คำสั่ง reproduce
 - §7 **ช่องว่างชั้นที่ 5 เจอหรือไม่** ← ส่วนที่ทำให้เปเปอร์แข็งที่สุด
 
-## ยังต้องมีอีก (นอกจากตัวเนื้อ)
+## ของประกอบ (เสร็จแล้ว)
 
-- cover image
-- public notebook ที่รันบน Kaggle ได้โดยไม่ต่อเน็ต
+- ✅ cover image — `cover.png` ทุกตัวเลขบนภาพอ่านจาก `data/simulation-gap-measured.json`
+  ไม่ได้พิมพ์มือ ทำซ้ำด้วย `python paper/make_cover.py`
+- ✅ public notebook ที่รันบน Kaggle ได้โดยไม่ต่อเน็ต — `notebook.ipynb`

@@ -1,0 +1,35 @@
+{
+  "_provenance": {
+    "what": "Four policies played in two arenas: a quiet hand-written mock and the same mock carrying noise calibrated from real runs",
+    "produced_by": "cd agi3 && PYTHONPATH=. .venv/bin/python scripts/simulation_gap.py --json-out ../paper/data/simulation-gap-measured.json",
+    "measured": "2026-09-19",
+    "repo_commit": "4af7cf0",
+    "documented_in": "docs/simulation-gap.md",
+    "note": "The component figure comes from 500 recorded traces (2.8GB, not shipped); the arena figures reproduce offline from the command above."
+  },
+  "arenas": {
+    "random": {
+      "quiet mock": "lost 2/3 in 400",
+      "noise-calibrated mock": "lost 2/3 in 400"
+    },
+    "greedy": {
+      "quiet mock": "WIN 3/3 in 30",
+      "noise-calibrated mock": "WIN 3/3 in 30"
+    },
+    "explorer": {
+      "quiet mock": "WIN 3/3 in 34",
+      "noise-calibrated mock": "lost 0/3 in 400"
+    },
+    "navigator": {
+      "quiet mock": "WIN 3/3 in 40",
+      "noise-calibrated mock": "lost 0/3 in 400"
+    }
+  },
+  "component": {
+    "games": 25,
+    "games_with_a_mapping": 17,
+    "mappings": 53,
+    "correct": 42,
+    "accuracy": 0.7924528301886793
+  }
+}
