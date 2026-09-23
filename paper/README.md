@@ -1,5 +1,11 @@
 # เนื้อเปเปอร์สำหรับ Paper Track
 
+| ไฟล์ | คืออะไร |
+|---|---|
+| `writeup-draft.md` | ตัวเนื้อ writeup |
+| `notebook.ipynb` | public notebook — **รันได้โดยไม่ต่อเน็ต** ทดสอบรันครบทุกเซลล์แล้ว |
+| `data/control-learning-measured.json` | ผลที่วัดจาก trace 500 ไฟล์ (8 KB) ฝังมาเพราะ trace จริง 2.8 GB |
+
 | ไฟล์ | สถานะ |
 |---|---|
 | `writeup-draft.md` | §2–8 เขียนครบ (**1,432 คำ**) · §1 ปิดท้าย และ §8 ท้ายสุด รอผลเกมสด |

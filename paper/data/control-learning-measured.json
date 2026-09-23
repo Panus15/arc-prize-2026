@@ -1,0 +1,316 @@
+{
+  "_provenance": {
+    "what": "Control-learning accuracy measured on recorded ARC-AGI-3 runs",
+    "source": "500 traces (25 games x 20 passes) from Tufalabs/duck-harness example-run",
+    "produced_by": "agi3/scripts/validate_control.py",
+    "measured": "2026-09-15",
+    "note": "Shipped because the traces themselves are 2.8GB and Kaggle runs offline."
+  },
+  "learning_curve": [
+    {
+      "observations": 5,
+      "passes_with_enough_data": 337,
+      "passes_producing_a_map": 0,
+      "mappings": 0,
+      "correct": 0,
+      "accuracy": 0.0
+    },
+    {
+      "observations": 10,
+      "passes_with_enough_data": 331,
+      "passes_producing_a_map": 193,
+      "mappings": 391,
+      "correct": 218,
+      "accuracy": 0.5575447570332481
+    },
+    {
+      "observations": 20,
+      "passes_with_enough_data": 325,
+      "passes_producing_a_map": 304,
+      "mappings": 779,
+      "correct": 497,
+      "accuracy": 0.637997432605905
+    },
+    {
+      "observations": 40,
+      "passes_with_enough_data": 297,
+      "passes_producing_a_map": 288,
+      "mappings": 902,
+      "correct": 653,
+      "accuracy": 0.7239467849223947
+    },
+    {
+      "observations": 80,
+      "passes_with_enough_data": 217,
+      "passes_producing_a_map": 213,
+      "mappings": 718,
+      "correct": 578,
+      "accuracy": 0.8050139275766016
+    },
+    {
+      "observations": 160,
+      "passes_with_enough_data": 53,
+      "passes_producing_a_map": 53,
+      "mappings": 188,
+      "correct": 149,
+      "accuracy": 0.7925531914893617
+    }
+  ],
+  "confidence_calibration": [
+    {
+      "confidence_from": 0.2,
+      "confidence_to": 0.4,
+      "mappings": 8,
+      "correct": 0,
+      "accuracy": 0.0
+    },
+    {
+      "confidence_from": 0.4,
+      "confidence_to": 0.6,
+      "mappings": 225,
+      "correct": 80,
+      "accuracy": 0.35555555555555557
+    },
+    {
+      "confidence_from": 0.6,
+      "confidence_to": 0.8,
+      "mappings": 388,
+      "correct": 327,
+      "accuracy": 0.8427835051546392
+    },
+    {
+      "confidence_from": 0.8,
+      "confidence_to": 1.0,
+      "mappings": 451,
+      "correct": 383,
+      "accuracy": 0.8492239467849224
+    }
+  ],
+  "per_game": [
+    {
+      "game": "ar25-0c556536",
+      "passes": 20,
+      "passes_producing_a_map": 20,
+      "mean_accuracy": 0.7416666666666667,
+      "accuracy_spread": 1.0,
+      "mean_movement_transitions": 129.45,
+      "colour_agreement": 0.55
+    },
+    {
+      "game": "bp35-0a0ad940",
+      "passes": 20,
+      "passes_producing_a_map": 20,
+      "mean_accuracy": 0.825,
+      "accuracy_spread": 0.5,
+      "mean_movement_transitions": 69.9,
+      "colour_agreement": 0.65
+    },
+    {
+      "game": "cd82-fb555c5d",
+      "passes": 20,
+      "passes_producing_a_map": 20,
+      "mean_accuracy": 0.0,
+      "accuracy_spread": 0.0,
+      "mean_movement_transitions": 47.55,
+      "colour_agreement": 0.75
+    },
+    {
+      "game": "cn04-2fe56bfb",
+      "passes": 20,
+      "passes_producing_a_map": 20,
+      "mean_accuracy": 0.975,
+      "accuracy_spread": 0.25,
+      "mean_movement_transitions": 112.3,
+      "colour_agreement": 0.55
+    },
+    {
+      "game": "dc22-fdcac232",
+      "passes": 20,
+      "passes_producing_a_map": 20,
+      "mean_accuracy": 0.6,
+      "accuracy_spread": 1.0,
+      "mean_movement_transitions": 61.2,
+      "colour_agreement": 0.6
+    },
+    {
+      "game": "ft09-0d8bbf25",
+      "passes": 20,
+      "passes_producing_a_map": 0,
+      "mean_accuracy": 0.0,
+      "accuracy_spread": 0.0,
+      "mean_movement_transitions": 0,
+      "colour_agreement": 0.0
+    },
+    {
+      "game": "g50t-5849a774",
+      "passes": 20,
+      "passes_producing_a_map": 20,
+      "mean_accuracy": 0.5,
+      "accuracy_spread": 1.0,
+      "mean_movement_transitions": 73.8,
+      "colour_agreement": 0.95
+    },
+    {
+      "game": "ka59-38d34dbb",
+      "passes": 20,
+      "passes_producing_a_map": 20,
+      "mean_accuracy": 0.975,
+      "accuracy_spread": 0.5,
+      "mean_movement_transitions": 99.05,
+      "colour_agreement": 0.95
+    },
+    {
+      "game": "lf52-271a04aa",
+      "passes": 20,
+      "passes_producing_a_map": 9,
+      "mean_accuracy": 0.7777777777777778,
+      "accuracy_spread": 1.0,
+      "mean_movement_transitions": 42,
+      "colour_agreement": 0.4444444444444444
+    },
+    {
+      "game": "lp85-305b61c3",
+      "passes": 20,
+      "passes_producing_a_map": 0,
+      "mean_accuracy": 0.0,
+      "accuracy_spread": 0.0,
+      "mean_movement_transitions": 0,
+      "colour_agreement": 0.0
+    },
+    {
+      "game": "ls20-9607627b",
+      "passes": 20,
+      "passes_producing_a_map": 20,
+      "mean_accuracy": 0.9625,
+      "accuracy_spread": 0.75,
+      "mean_movement_transitions": 156.7,
+      "colour_agreement": 0.85
+    },
+    {
+      "game": "m0r0-492f87ba",
+      "passes": 20,
+      "passes_producing_a_map": 19,
+      "mean_accuracy": 1.0,
+      "accuracy_spread": 0.0,
+      "mean_movement_transitions": 99.65,
+      "colour_agreement": 1.0
+    },
+    {
+      "game": "r11l-495a7899",
+      "passes": 20,
+      "passes_producing_a_map": 0,
+      "mean_accuracy": 0.0,
+      "accuracy_spread": 0.0,
+      "mean_movement_transitions": 0,
+      "colour_agreement": 0.0
+    },
+    {
+      "game": "re86-8af5384d",
+      "passes": 20,
+      "passes_producing_a_map": 20,
+      "mean_accuracy": 1.0,
+      "accuracy_spread": 0.0,
+      "mean_movement_transitions": 149.25,
+      "colour_agreement": 1.0
+    },
+    {
+      "game": "s5i5-18d95033",
+      "passes": 20,
+      "passes_producing_a_map": 0,
+      "mean_accuracy": 0.0,
+      "accuracy_spread": 0.0,
+      "mean_movement_transitions": 0,
+      "colour_agreement": 0.0
+    },
+    {
+      "game": "sb26-7fbdac44",
+      "passes": 20,
+      "passes_producing_a_map": 0,
+      "mean_accuracy": 0.0,
+      "accuracy_spread": 0.0,
+      "mean_movement_transitions": 0,
+      "colour_agreement": 0.0
+    },
+    {
+      "game": "sc25-635fd71a",
+      "passes": 20,
+      "passes_producing_a_map": 18,
+      "mean_accuracy": 0.537037037037037,
+      "accuracy_spread": 1.0,
+      "mean_movement_transitions": 65.7,
+      "colour_agreement": 0.5555555555555556
+    },
+    {
+      "game": "sk48-d8078629",
+      "passes": 20,
+      "passes_producing_a_map": 20,
+      "mean_accuracy": 0.35833333333333334,
+      "accuracy_spread": 0.6666666666666666,
+      "mean_movement_transitions": 145.65,
+      "colour_agreement": 0.65
+    },
+    {
+      "game": "sp80-589a99af",
+      "passes": 20,
+      "passes_producing_a_map": 20,
+      "mean_accuracy": 1.0,
+      "accuracy_spread": 0.0,
+      "mean_movement_transitions": 142.45,
+      "colour_agreement": 1.0
+    },
+    {
+      "game": "su15-1944f8ab",
+      "passes": 20,
+      "passes_producing_a_map": 0,
+      "mean_accuracy": 0.0,
+      "accuracy_spread": 0.0,
+      "mean_movement_transitions": 0,
+      "colour_agreement": 0.0
+    },
+    {
+      "game": "tn36-ef4dde99",
+      "passes": 20,
+      "passes_producing_a_map": 0,
+      "mean_accuracy": 0.0,
+      "accuracy_spread": 0.0,
+      "mean_movement_transitions": 0,
+      "colour_agreement": 0.0
+    },
+    {
+      "game": "tr87-cd924810",
+      "passes": 20,
+      "passes_producing_a_map": 20,
+      "mean_accuracy": 1.0,
+      "accuracy_spread": 0.0,
+      "mean_movement_transitions": 165.9,
+      "colour_agreement": 1.0
+    },
+    {
+      "game": "tu93-0768757b",
+      "passes": 20,
+      "passes_producing_a_map": 20,
+      "mean_accuracy": 0.2375,
+      "accuracy_spread": 1.0,
+      "mean_movement_transitions": 106.35,
+      "colour_agreement": 0.75
+    },
+    {
+      "game": "vc33-5430563c",
+      "passes": 20,
+      "passes_producing_a_map": 0,
+      "mean_accuracy": 0.0,
+      "accuracy_spread": 0.0,
+      "mean_movement_transitions": 0,
+      "colour_agreement": 0.0
+    },
+    {
+      "game": "wa30-ee6fef47",
+      "passes": 20,
+      "passes_producing_a_map": 20,
+      "mean_accuracy": 0.975,
+      "accuracy_spread": 0.25,
+      "mean_movement_transitions": 140.25,
+      "colour_agreement": 0.9
+    }
+  ]
+}
