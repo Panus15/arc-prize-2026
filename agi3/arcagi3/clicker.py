@@ -28,6 +28,13 @@ Cell = tuple[int, int]
 # worth more than a handful of dead ends.
 LEVEL_REWARD = 3
 
+# Clicks without a level between presses of ACTION5, when the game offers it.
+# In the recordings of sb26, the one public game offering only ACTION5 and
+# clicks, all 22 level completions came on ACTION5, never on a click: clicking
+# sets something up and ACTION5 submits it. One game is thin evidence for a
+# rule, so the rule is cheap: one action in every seven.
+CONFIRM_EVERY = 6
+
 
 class ClickAgent(BaseAgent):
     """Clicks objects, learns which colours answer, then clicks those."""
@@ -42,12 +49,17 @@ class ClickAgent(BaseAgent):
         self._target: Cell | None = None
         self._target_colour: int | None = None
         self._levels_seen = 0
+        self._clicks_since_confirm = 0
 
     def choose_action(self, frames: list[FrameData], latest: FrameData) -> GameAction:
         board = latest.frame[0]
         self._learn(board, latest.levels_completed)
 
         available = actions_from_values(latest.available_actions)
+        if GameAction.ACTION5 in available and self._clicks_since_confirm >= CONFIRM_EVERY:
+            self._clicks_since_confirm = 0
+            self._before, self._target, self._target_colour = None, None, None
+            return GameAction.ACTION5
         if GameAction.ACTION6 not in available:
             # Nothing to click with; RESET is the only thing that can change that.
             return GameAction.RESET
@@ -57,6 +69,7 @@ class ClickAgent(BaseAgent):
             return GameAction.RESET
 
         cell, colour = choice
+        self._clicks_since_confirm += 1
         self._before = [row[:] for row in board]
         self._target, self._target_colour = cell, colour
         return mouse_action(*cell)
@@ -70,6 +83,12 @@ class ClickAgent(BaseAgent):
     def _learn(self, board: list[list[int]], levels_completed: int) -> None:
         """Credit or blame the colour just clicked for what the board did."""
         if self._before is None or self._target_colour is None:
+            # Not after a click of ours (the first frame, or after ACTION5). A
+            # level that arrived anyway belongs to no colour, but it must still
+            # be counted, or the next click would be credited with it.
+            if levels_completed > self._levels_seen:
+                self._levels_seen = levels_completed
+                self._clicks_since_confirm = 0
             return
         colour = self._target_colour
         # Capture the previous board before clearing it: comparing against the
@@ -82,6 +101,7 @@ class ClickAgent(BaseAgent):
         if levels_completed > self._levels_seen:
             self._levels_seen = levels_completed
             self._responsive[colour] += LEVEL_REWARD
+            self._clicks_since_confirm = 0
             return
         if board == previous:
             # Nothing at all happened. Rare in the real games, but where it does

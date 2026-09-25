@@ -33,20 +33,22 @@ def test_the_submitted_agent_plays_a_game_from_disk(tmp_path: Path, capsys) -> N
     import play_offline
 
     out = tmp_path / "result.json"
-    assert play_offline.main([str(FIXTURES), "--max-actions", "60", "--json-out", str(out)]) == 0
+    assert play_offline.main([str(FIXTURES), "--max-actions", "400", "--json-out", str(out)]) == 0
 
     result = json.loads(out.read_text())
     ours = result["results"]["myagent"]
     floor = result["results"]["random"]
 
     by_id = {game["game_id"]: game for game in ours["games"]}
-    assert set(by_id) == {"tw01", "tc01"}
+    assert set(by_id) == {"tw01", "tc01", "tc02"}
     for game_id, game in by_id.items():
-        # tw01 is only solvable by walking, tc01 only by clicking the right
-        # cell, so a win on both means the router sent each to the right policy
-        # and the click carried its coordinates.
+        # tw01 is only solvable by walking, tc01 and tc02 only by clicking the
+        # right cell, so a win on all three means the router sent each to the
+        # right policy (or switched to it) and the click carried its coordinates.
         assert game["state"] == "WIN", game_id
         assert game["levels_completed"] == game["win_levels"] == 2, game_id
+    # tc02 offers directions, so it is walked first and cleared only by switching.
+    assert by_id["tc02"]["used"] == ["navigator", "clicker"]
     assert ours["score"] > 0  # the official scorecard was computed
     for game in floor["games"]:
         assert game["levels_completed"] <= by_id[game["game_id"]]["levels_completed"]

@@ -77,11 +77,15 @@ def play(arcade, agent_class, name: str, games: list[str]) -> dict:
         )
         agent.main()
         final = agent.frames[-1]
-        chosen = getattr(getattr(agent, "policy", None), "chosen", None)
+        router = getattr(agent, "policy", None)
+        used = list(getattr(router, "used", None) or [name])
         per_game.append(
             {
                 "game_id": game_id,
-                "policy": chosen.name if chosen is not None else name,
+                # The policy the game started with: what "walked games" means in
+                # the pre-registered comparison. `used` shows any switch after.
+                "policy": used[0],
+                "used": used,
                 "state": final.state.name,
                 "levels_completed": final.levels_completed,
                 "win_levels": final.win_levels,

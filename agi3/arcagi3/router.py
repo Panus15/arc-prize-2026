@@ -36,8 +36,19 @@ def walker() -> BaseAgent:
     return NavigatorAgent(estimator="fallback")
 
 
+# Actions without a new level before the other mode is tried, in a game that
+# offers both. In the recordings of lf52, which offers directions and clicks,
+# all 15 level completions came from clicks: routing by the offer alone would
+# have walked it forever. An uncleared level scores 0 at any action count, so
+# trying the other mode costs only levels that were already going badly — a
+# level cleared after 300 actions scores (baseline / 300)^2 of its maximum.
+# 300 itself is a judgement, not a measurement; revisit it on real games.
+STALL_BUDGET = 300
+
+
 class RoutingAgent(BaseAgent):
-    """Delegates to a walker when directions are offered, else to a clicker."""
+    """Walks when directions are offered, clicks when only the mouse is, and
+    tries the other of the two when one stops producing levels."""
 
     name = "router"
 
@@ -45,26 +56,57 @@ class RoutingAgent(BaseAgent):
         self,
         walker: Callable[[], BaseAgent] = walker,
         clicker: Callable[[], BaseAgent] = ClickAgent,
+        stall_budget: int = STALL_BUDGET,
     ) -> None:
-        self._walker = walker
-        self._clicker = clicker
+        self._factories = {"walk": walker, "click": clicker}
+        self._instances: dict[str, BaseAgent] = {}
+        self._modes: list[str] = []
+        self._mode = 0
+        self._stall_budget = stall_budget
+        self._since_progress = 0
+        self._level = 0
+        self.switches = 0
         self.chosen: BaseAgent | None = None
+        #: Names of the policies used, in the order first used.
+        self.used: list[str] = []
 
-    def _pick(self, latest: FrameData) -> BaseAgent | None:
+    def _plan(self, latest: FrameData) -> list[str]:
         offered = set(latest.available_actions or ())
+        modes = []
         if offered & DIRECTIONS:
-            return self._walker()
+            modes.append("walk")
         if CLICK in offered:
-            return self._clicker()
-        return None  # nothing informative yet; decide on a later frame
+            modes.append("click")
+        return modes
+
+    def _use(self, mode: str) -> BaseAgent:
+        # Kept, not rebuilt: coming back to a mode resumes what it had learned.
+        if mode not in self._instances:
+            self._instances[mode] = self._factories[mode]()
+            self.used.append(self._instances[mode].name)
+        self.chosen = self._instances[mode]
+        return self.chosen
 
     def choose_action(self, frames: list[FrameData], latest: FrameData) -> GameAction:
-        if self.chosen is None:
-            self.chosen = self._pick(latest)
-        if self.chosen is None:
-            # Neither kind offered: whatever is legal, never a click with no target.
-            offered = [a for a in latest.available_actions if a != CLICK]
-            return GameAction.RESET if not offered else action_from_value(min(offered))
+        if not self._modes:
+            self._modes = self._plan(latest)
+            if not self._modes:
+                # Neither kind offered: whatever is legal, never a click with no target.
+                offered = [a for a in latest.available_actions if a != CLICK]
+                return GameAction.RESET if not offered else action_from_value(min(offered))
+            self._use(self._modes[0])
+
+        if latest.levels_completed != self._level:
+            self._level = latest.levels_completed
+            self._since_progress = 0
+        elif len(self._modes) > 1 and self._since_progress >= self._stall_budget:
+            self._mode = (self._mode + 1) % len(self._modes)
+            self._since_progress = 0
+            self.switches += 1
+            self._use(self._modes[self._mode])
+        self._since_progress += 1
+
+        assert self.chosen is not None
         return self.chosen.choose_action(frames, latest)
 
     def is_done(self, frames: list[FrameData], latest: FrameData) -> bool:

@@ -2,7 +2,7 @@
 
 > ปรับปรุง **25 ก.ย. 2026**
 > ⏰ **Milestone #2: 30 ก.ย. — เหลือ 5 วัน** · **ปิดรับ 9 พ.ย. 23:59 UTC — เหลือ 45 วัน**
-> **239 เทสผ่าน** · **สิ่งที่คุณต้องทำ → [`YOUR-STEPS.md`](YOUR-STEPS.md)**
+> **245 เทสผ่าน** · **สิ่งที่คุณต้องทำ → [`YOUR-STEPS.md`](YOUR-STEPS.md)**
 
 ---
 
@@ -50,7 +50,7 @@
 | `navigator` | ทิ้ง mapping ที่ผิดได้ · กู้คืนเมื่อปุ่มเปลี่ยนกลางเกม | ⚠️ mock |
 | `clicker` | กฎเลือกสีถูก **7/7 เกม** | ✅ trace จริง |
 | `sdk_adapter` | พร้อม submit · รองรับ MOUSE · แก้การอ่าน frame stack · **แก้บั๊กพิกัดคลิกข้าม thread** | 🟡 ผ่าน runner ทางการ + game server ของ SDK (จำลอง) · ยังไม่เจอเกมจริง |
-| `router` | เลือกเดิน/คลิกตาม `available_actions` ครั้งเดียวต่อเกม | 🟡 เกมจำลอง |
+| `router` | เลือกเดิน/คลิกตาม `available_actions` · **ไม่ผ่านด่านใน 300 action → สลับโหมด** (`mode-switching.md`) | 🟡 เกมจำลอง · หลักฐานจากบันทึกจริง: 4/25 เกมผ่านด่านด้วย action ที่รายการปุ่มไม่บอก |
 | **Kaggle notebook** | `agi3/submission/kaggle/submission.ipynb` · self-check ก่อน submit | 🟡 **จำลอง Kaggle ครบทั้ง 2 รอบ ผ่าน** · ยังไม่ขึ้นเว็บจริง |
 | `play_offline` | รันเกมจริงแบบไม่ต่อเน็ต ผ่าน runner ทางการ + scorecard ทางการ | 🟡 เกมจำลอง · **รอไฟล์เกมจริง** |
 | `budgeting` | **adaptive ไม่ชนะ even split เลย** | ⚠️ mock |

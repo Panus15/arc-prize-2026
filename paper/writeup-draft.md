@@ -40,10 +40,10 @@ which colour moves, and in which direction, per action. It routes by shortest
 path over cells it has observed to be passable, and abandons a mapping when its
 own predictions stop coming true.
 
-A second policy handles games that take no directional input. Of the 25 official
-games, eight are played almost entirely with MOUSE and never once with a
-direction, including the highest-scoring game in the Milestone #1 winner's
-recorded run.
+A second policy clicks: in games taking no directional input, and wherever
+walking stops producing levels. Of the 25 official games, eight are played
+almost entirely with MOUSE and never once with a direction, including the
+highest-scoring game in the Milestone #1 winner's recorded run.
 
 Neither policy is the contribution. What they produced is.
 

@@ -225,3 +225,83 @@ def test_errors_still_surface_when_asked_to():
 
     with pytest.raises(RuntimeError):
         Agent().choose_action([], frame((1, 2)))
+
+
+# --- switching modes when one stops producing levels ---------------------------
+
+
+class Fixed(ClickAgent):
+    """Returns one action forever; enough to watch the router decide."""
+
+    def __init__(self, action: GameAction, name: str) -> None:
+        super().__init__()
+        self.action, self.name = action, name
+
+    def choose_action(self, frames, latest):
+        return self.action
+
+
+def two_mode_router(budget: int = 5) -> RoutingAgent:
+    return RoutingAgent(
+        walker=lambda: Fixed(GameAction.ACTION1, "walk-stub"),
+        clicker=lambda: Fixed(GameAction.ACTION6, "click-stub"),
+        stall_budget=budget,
+    )
+
+
+def levelled(available, levels):
+    f = frame(available)
+    return f.model_copy(update={"levels_completed": levels})
+
+
+def test_the_other_mode_is_tried_when_levels_stop_coming():
+    router = two_mode_router(budget=5)
+    actions = [router.choose_action([], levelled((1, 2, 3, 4, 6), 0)) for _ in range(7)]
+    assert actions[:5] == [GameAction.ACTION1] * 5
+    assert actions[5:] == [GameAction.ACTION6] * 2
+    assert router.used == ["walk-stub", "click-stub"]
+
+
+def test_a_new_level_resets_the_patience():
+    router = two_mode_router(budget=5)
+    for step in range(12):
+        router.choose_action([], levelled((1, 2, 3, 4, 6), step // 4))  # a level every 4
+    assert router.switches == 0
+
+
+def test_coming_back_resumes_the_same_policy():
+    router = two_mode_router(budget=2)
+    for _ in range(6):
+        router.choose_action([], levelled((1, 2, 3, 4, 6), 0))
+    assert router.switches >= 2
+    assert router.used == ["walk-stub", "click-stub"]  # no third instance
+
+
+def test_a_game_with_one_mode_never_switches():
+    router = two_mode_router(budget=2)
+    for _ in range(10):
+        router.choose_action([], levelled((1, 2, 3, 4), 0))
+    assert router.switches == 0
+
+
+# --- the clicker's occasional ACTION5 -------------------------------------------
+
+
+def test_the_clicker_presses_action5_now_and_then_when_offered():
+    from arcagi3.clicker import CONFIRM_EVERY
+
+    board = [[0] * 8 for _ in range(8)]
+    board[2][2] = 3
+    clicker = ClickAgent()
+    f = frame((5, 6)).model_copy(update={"frame": [board]})
+    played = [clicker.choose_action([], f) for _ in range(2 * (CONFIRM_EVERY + 1))]
+    assert played.count(GameAction.ACTION5) == 2
+    assert played[CONFIRM_EVERY] is GameAction.ACTION5
+
+
+def test_the_clicker_never_presses_action5_when_not_offered():
+    board = [[0] * 8 for _ in range(8)]
+    board[2][2] = 3
+    clicker = ClickAgent()
+    f = frame((6,)).model_copy(update={"frame": [board]})
+    assert GameAction.ACTION5 not in [clicker.choose_action([], f) for _ in range(20)]
