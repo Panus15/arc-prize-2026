@@ -67,6 +67,27 @@ What B changes, and what it does not claim: on recorded real boards its ACTION5
 share is 0-10% and it made 0 errors in 500 passes; in six mock arenas it clears
 every one. Whether it clears **real** levels is exactly what is not yet known.
 
+## Addendum 2, same day: agent C, the one submitted to Kaggle
+
+Also before any real game file. The recordings tag each level completion with
+the action that caused it; in 4 of 25 public games that action is not the one
+the action list suggests (`docs/mode-switching.md`). C adds two general rules
+on top of B: switch between walking and clicking after 300 actions without a
+level, in games offering both; and let the clicker press ACTION5 once per six
+fruitless clicks where offered.
+
+| | Agent C |
+|---|---|
+| commit | **`01562fc4dc97a5830038ff59970beba910518e51`** (2026-09-25T13:27:57+00:00) |
+| `agi3/arcagi3/` tree | `989f4ee69b118e9412fe5f6ca2a310afe4d00fb2` |
+| `agi3/submission/my_agent.py` | `bb12140f2a07cbf1d3e016784a315c95eefd3df9` (unchanged from B) |
+
+C is run after A and B, under the same protocol. Because C can switch policy
+mid-game, `play_offline.py` records for every game the policy it started with,
+every policy it used, and how many levels each one cleared. The walker
+comparison counts games by starting policy and counts only levels the walker
+itself cleared.
+
 ## Why a file and not a git tag
 
 A tag `prereg-real-games` was created on `dc949b4` but this development
