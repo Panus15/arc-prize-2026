@@ -47,8 +47,9 @@ class NoisyEnvironment(MockEnvironment):
         *,
         hud: bool = True,
         animate: bool = True,
+        static_actions: bool = False,
     ) -> None:
-        super().__init__(levels=levels, moves=moves)
+        super().__init__(levels=levels, moves=moves, static_actions=static_actions)
         self._hud = hud
         self._animate = animate
         self._ticks = 0

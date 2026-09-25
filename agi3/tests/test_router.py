@@ -136,3 +136,92 @@ def test_non_click_actions_go_through_the_runner_unchanged():
     agent = clicking_agent((1, 2))
     agent.do_action_request(GameAction.ACTION1)
     assert agent.arc_env.sent == [{"game_id": ""}]
+
+
+# --- the runner's frame history ---------------------------------------------
+
+
+class HistoryAgent:
+    """Stands in for the runner's Agent.append_frame: appends and keeps everything."""
+
+    def __init__(self) -> None:
+        self.frames: list = []
+
+    def append_frame(self, frame) -> None:
+        self.frames.append(frame)
+
+
+def test_the_frame_history_is_bounded():
+    class Agent(SDKPolicyAdapter, HistoryAgent):
+        keep_frames = 5
+
+    agent = Agent()
+    for index in range(100):
+        agent.append_frame(index)
+    assert agent.frames == [95, 96, 97, 98, 99]
+
+
+def test_keeping_everything_is_still_possible():
+    class Agent(SDKPolicyAdapter, HistoryAgent):
+        keep_frames = None
+
+    agent = Agent()
+    for index in range(40):
+        agent.append_frame(index)
+    assert len(agent.frames) == 40
+
+
+# --- surviving a policy error -------------------------------------------------
+
+
+class Broken(ClickAgent):
+    calls = 0
+
+    def choose_action(self, frames, latest):
+        type(self).calls += 1
+        raise RuntimeError("a bug that only real boards trigger")
+
+
+def test_a_policy_error_costs_one_action_not_the_game():
+    class Agent(SDKPolicyAdapter):
+        policy_factory = Broken
+
+    agent = Agent()
+    played = [agent.choose_action([], frame((1, 2, 3, 4, 6))) for _ in range(6)]
+    assert all(a in (GameAction.ACTION1, GameAction.ACTION2, GameAction.ACTION3, GameAction.ACTION4)
+               for a in played)
+    assert len(set(played)) > 1  # rotates rather than pinning one button
+    assert agent.policy_errors == 6
+
+
+def test_the_policy_is_rebuilt_after_an_error():
+    built = []
+
+    class Flaky(ClickAgent):
+        def __init__(self):
+            super().__init__()
+            built.append(self)
+
+        def choose_action(self, frames, latest):
+            if len(built) == 1:
+                raise RuntimeError("first instance is broken")
+            return GameAction.ACTION6
+
+    class Agent(SDKPolicyAdapter):
+        policy_factory = Flaky
+
+    agent = Agent()
+    agent.choose_action([], frame((6,)))  # first instance raises
+    agent.choose_action([], frame((6,)))  # a fresh one is built and works
+    assert len(built) == 2
+
+
+def test_errors_still_surface_when_asked_to():
+    import pytest
+
+    class Agent(SDKPolicyAdapter):
+        policy_factory = Broken
+        survive_policy_errors = False
+
+    with pytest.raises(RuntimeError):
+        Agent().choose_action([], frame((1, 2)))

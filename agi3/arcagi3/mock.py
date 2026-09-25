@@ -89,16 +89,25 @@ class MockEnvironment:
         self,
         levels: tuple[Level, ...] = LEVELS,
         moves: dict[GameAction, tuple[int, int]] | None = None,
+        *,
+        static_actions: bool = False,
     ) -> None:
         """`moves` overrides which action goes which way.
 
         Scrambling it is how a policy gets tested for actually learning the
         controls rather than assuming the usual ACTION1-is-up layout.
+
+        `static_actions` offers the same actions on every frame, which is what
+        the real engine does: `ARCBaseGame` sets `available_actions` once and
+        echoes it. The default instead offers only what would do something from
+        the current cell — our own invention, kept so older measurements stay
+        reproducible, and the reason the interact-on-sight bug went unseen.
         """
         if not levels:
             raise ValueError("need at least one level")
         self._levels = levels
         self._moves = dict(MOVES if moves is None else moves)
+        self._static_actions = static_actions
         self._level_index = 0
         self._pos = levels[0].start
         self._state = GameState.NOT_PLAYED
@@ -145,7 +154,7 @@ class MockEnvironment:
             self._pos = self.level.start
             return self._frame(action, full_reset=True)
 
-        if action in self._moves and action in self.available_actions():
+        if action in self._moves and self._can_move(action):
             dy, dx = self._moves[action]
             self._pos = (self._pos[0] + dy, self._pos[1] + dx)
         elif action is INTERACT and self._pos == self.level.target:
@@ -161,17 +170,21 @@ class MockEnvironment:
         """
         if self._state in (GameState.WIN, GameState.GAME_OVER):
             return []
+        if self._static_actions:
+            return [GameAction.RESET, *sorted(self._moves, key=lambda a: a.value), INTERACT]
 
-        level, (y, x) = self.level, self._pos
         actions = [GameAction.RESET]
-        for action, (dy, dx) in self._moves.items():
-            ny, nx = y + dy, x + dx
-            in_bounds = 0 <= ny < level.height and 0 <= nx < level.width
-            if in_bounds and (ny, nx) not in level.walls:
-                actions.append(action)
-        if (y, x) == level.target:
+        actions += [action for action in self._moves if self._can_move(action)]
+        if self._pos == self.level.target:
             actions.append(INTERACT)
         return actions
+
+    def _can_move(self, action: GameAction) -> bool:
+        """Whether `action` would take the player to an open, in-bounds cell."""
+        level, (y, x) = self.level, self._pos
+        dy, dx = self._moves[action]
+        ny, nx = y + dy, x + dx
+        return 0 <= ny < level.height and 0 <= nx < level.width and (ny, nx) not in level.walls
 
     # --- internals ----------------------------------------------------------
 

@@ -27,7 +27,7 @@ from arcengine import GameAction
 
 from arcagi3.budget import run_episode
 from arcagi3.control import ControlLearner
-from arcagi3.navigator import NavigatorAgent
+from arcagi3.navigator_v1 import NavigatorAgent
 from arcagi3.noisy_mock import NoisyEnvironment
 from arcagi3.replay import LABEL_DIRECTION, read_transitions
 

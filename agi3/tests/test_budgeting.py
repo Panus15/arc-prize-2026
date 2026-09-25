@@ -10,7 +10,7 @@ from arcagi3.budgeting import (
     play_suite,
 )
 from arcagi3.mock import Level, MockEnvironment
-from arcagi3.navigator import NavigatorAgent
+from arcagi3.navigator_v1 import NavigatorAgent
 
 # Reachable, but the first level needs 88 actions — far more than a share of a
 # tight budget, so it stands in for the games the winner scored zero on.

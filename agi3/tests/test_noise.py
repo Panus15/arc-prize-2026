@@ -8,7 +8,7 @@ from arcagi3.budget import run_episode
 from arcagi3.click_mock import ClickEnvironment
 from arcagi3.clicker import ClickAgent
 from arcagi3.mock import MockEnvironment
-from arcagi3.navigator import NavigatorAgent
+from arcagi3.navigator_v1 import NavigatorAgent
 from arcagi3.noise import HUD_COLOUR, NoiseWrapper
 
 PLAYER = 4

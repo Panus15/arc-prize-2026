@@ -41,10 +41,12 @@ What the adapter fixes up between the real API and our policies:
 * that payload lives on the `GameAction` enum member, one object shared by
   every agent in the process, and the runner's `Swarm` plays every game on its
   own thread at once — so each agent sends the coordinates it chose itself.
+* the runner keeps every frame it is sent, forever; the adapter keeps a window.
 """
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable, Iterable, Sequence
 from typing import Protocol, runtime_checkable
 
@@ -59,6 +61,8 @@ Grid = list[list[int]]
 
 # `ComplexAction` bounds x and y to 0..63, and the engine's camera renders 64x64.
 BOARD_SIZE = 64
+
+logger = logging.getLogger(__name__)
 
 
 @runtime_checkable
@@ -183,6 +187,20 @@ class SDKPolicyAdapter:
     #: beats forfeiting the turn.
     default_mouse_target: tuple[int, int] = (BOARD_SIZE // 2, BOARD_SIZE // 2)
 
+    #: Frames the runner is allowed to keep. It appends every frame of every
+    #: game and never lets go; measured at 38-110 KB a frame, 2,000 actions in
+    #: each of 55 concurrent games is 4-12 GB, and running out of memory ends
+    #: the notebook with every game unscored. Our policies read only the latest
+    #: frame. None keeps everything.
+    keep_frames: int | None = 32
+
+    #: An exception out of `choose_action` ends that game's thread in the
+    #: runner, and the rest of the game scores nothing. With this on, a policy
+    #: error costs one action instead: the policy is rebuilt from scratch and a
+    #: legal simple action is played. Tools that hunt for such errors (e.g.
+    #: scripts/replay_traces.py) turn it off so they still see them.
+    survive_policy_errors: bool = True
+
     @property
     def policy(self) -> BaseAgent:
         """The wrapped policy, built lazily on first access.
@@ -217,14 +235,34 @@ class SDKPolicyAdapter:
             # here: ours read `frame[0]` and would raise on an empty stack.
             return fallback_action(available, exclude=COMPLEX_ACTIONS)
 
-        chosen = self.policy.choose_action(
-            [normalise_frame(frame) for frame in frames],
-            normalise_frame(latest_frame),
-        )
+        try:
+            chosen = self.policy.choose_action(
+                [normalise_frame(frame) for frame in frames],
+                normalise_frame(latest_frame),
+            )
+        except Exception:
+            if not type(self).survive_policy_errors:
+                raise
+            return self._after_policy_error(available)
         if chosen not in available:
             # The SDK does not check this, and the game charges for the attempt.
             chosen = fallback_action(available)
         return self._with_payload(chosen, available)
+
+    def _after_policy_error(self, available: Sequence[GameAction]) -> GameAction:
+        """Log the error, start the policy afresh, and play something legal."""
+        self.policy_errors = getattr(self, "policy_errors", 0) + 1
+        if self.policy_errors <= 3:
+            logger.exception("policy raised (error %d); playing a fallback", self.policy_errors)
+        self._policy = None  # whatever state led here is not trusted again
+        self._click = None
+        options = sorted(
+            (a for a in available if a is not GameAction.RESET and a not in COMPLEX_ACTIONS),
+            key=lambda a: a.value,
+        )
+        # Rotate rather than repeat: a policy that keeps failing should not pin
+        # the game to one button for the rest of its budget.
+        return options[self.policy_errors % len(options)] if options else GameAction.RESET
 
     def _with_payload(self, chosen: GameAction, available: Sequence[GameAction]) -> GameAction:
         """Attach a click target to a complex action, or pick something simpler."""
@@ -249,6 +287,14 @@ class SDKPolicyAdapter:
         action = mouse_action(row, col)
         self._click = (row, col)
         return action
+
+    def append_frame(self, frame: FrameData) -> None:
+        """The runner's append, then drop all but the last `keep_frames`."""
+        super().append_frame(frame)  # type: ignore[misc]
+        frames = getattr(self, "frames", None)
+        keep = type(self).keep_frames
+        if keep is not None and frames is not None and len(frames) > keep:
+            del frames[: len(frames) - keep]
 
     def do_action_request(self, action: GameAction) -> FrameData:
         """Send a click with the coordinates this agent chose, not the shared ones.

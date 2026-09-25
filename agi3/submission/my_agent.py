@@ -22,7 +22,16 @@ class MyAgent(SDKPolicyAdapter, Agent):
     """Walks games that offer directions, clicks games that only take the mouse."""
 
     #: Per-game action cap. The runner stops a game at this many actions.
-    MAX_ACTIONS = 400
+    #:
+    #: Set from the scoring code (arc_agi.scorecard), not guessed: a level that
+    #: is never cleared scores 0 however many actions it took, so extra actions
+    #: can only help, and a level cleared late still scores
+    #: min(115, 100 * (baseline / actions) ** 2) > 0. The price is time, against
+    #: a 12-hour limit shared by every game. On recorded real boards this agent
+    #: decides in 4 ms at the median and 25 ms at the 99th percentile
+    #: (scripts/replay_traces.py); even at 30 ms an action including the game
+    #: server, 100 games at 2,000 actions is 1.7 hours.
+    MAX_ACTIONS = 2000
 
     policy_factory = RoutingAgent
 

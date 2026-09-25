@@ -167,22 +167,24 @@ class ControlLearner:
         for colour in start_cells.keys() & end_cells.keys():
             if len(start_cells[colour]) > limit:
                 continue  # scenery
-            delta = overlap_displacement(start_cells[colour], end_cells[colour])
-            direction = direction_of(delta) if delta is not None else None
-
-            if direction is None and self.estimator == "fallback":
-                # Cell alignment found nothing to line up — the shape changed too
-                # much. The centre of mass still has an opinion, and a weak
-                # reading beats discarding the observation.
-                if colour in start_mass and colour in end_mass:
-                    drift = (
-                        end_mass[colour][0] - start_mass[colour][0],
-                        end_mass[colour][1] - start_mass[colour][1],
-                    )
-                    direction = direction_of(drift)
-
+            direction = self._direction(colour, start_cells, end_cells, start_mass, end_mass)
             if direction is not None:
                 self._votes[colour][action][direction] += 1
+
+    def _direction(self, colour, start_cells, end_cells, start_mass, end_mass) -> Delta | None:
+        delta = overlap_displacement(start_cells[colour], end_cells[colour])
+        direction = direction_of(delta) if delta is not None else None
+        if direction is None and self.estimator == "fallback":
+            # Cell alignment found nothing to line up — the shape changed too
+            # much. The centre of mass still has an opinion, and a weak reading
+            # beats discarding the observation.
+            if colour in start_mass and colour in end_mass:
+                drift = (
+                    end_mass[colour][0] - start_mass[colour][0],
+                    end_mass[colour][1] - start_mass[colour][1],
+                )
+                direction = direction_of(drift)
+        return direction
 
     def candidate(self) -> tuple[int, dict[GameAction, Delta], float] | None:
         """The colour that best behaves like the thing under our control.

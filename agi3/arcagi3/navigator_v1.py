@@ -1,4 +1,15 @@
-"""A policy built from the parts that survived contact with real games.
+"""The walking policy exactly as it stood when the published measurements were made.
+
+FROZEN at commit dc949b4 (25 Sep 2026) — do not edit. Every navigator figure in
+docs/ and in the writeup (the gap table, the noise ablation, the budgeting
+comparison, the correlation sweep) was measured with this code, and the scripts
+and tests that reproduce those figures import it from here. The policy that is
+submitted lives in `navigator.py` and has moved on; see docs/static-actions.md
+for why.
+
+Original description follows.
+
+A policy built from the parts that survived contact with real games.
 
 `ExplorerAgent` learns the controls by requiring a single unambiguous object
 movement, which works on a tidy board and almost never fires on a real one
@@ -18,11 +29,11 @@ from collections import Counter, deque
 
 from arcengine import FrameData, GameAction
 
-from arcagi3.actions import COMPLEX_ACTIONS, actions_from_values
+from arcagi3.actions import actions_from_values
 from arcagi3.agent import BaseAgent
 from arcagi3.control import ControlLearner
 from arcagi3.navigation import ObstacleModel, find_path
-from arcagi3.perception import Node, segment
+from arcagi3.perception import segment
 
 # Measured across 500 recorded runs: below 0.6 the learned mapping is 36%
 # accurate, just above it 84%, and the top band only 85% — so the cliff is at
@@ -36,12 +47,6 @@ TRUST_THRESHOLD = 0.6
 # than none: the agent follows it and spends actions the scorecard counts. One
 # recorded game produced a mapping on all 20 passes and was wrong on every one.
 PREDICTION_WINDOW = 8
-
-# Steps allowed toward one target without getting any closer before it is given
-# up for this level. What stops a walker from pacing at a HUD bar outside the
-# playfield, or at anything else it cannot reach, without having to tell those
-# apart from goals that merely animate.
-PATIENCE = 6
 MIN_PREDICTION_HITS = 3
 
 Grid = list[list[int]]
@@ -57,10 +62,8 @@ class NavigatorAgent(BaseAgent):
         self,
         interact: GameAction = GameAction.ACTION5,
         trust: float = TRUST_THRESHOLD,
-        estimator: str = "centroid",
     ) -> None:
-        self._estimator = estimator
-        self.control = ControlLearner(estimator=estimator)
+        self.control = ControlLearner()
         self.obstacles = ObstacleModel()
         self._interact = interact
         self._trust = trust
@@ -71,92 +74,44 @@ class NavigatorAgent(BaseAgent):
         self._predictions: deque[bool] = deque(maxlen=PREDICTION_WINDOW)
         self._expected: tuple[Cell, Cell] | None = None
         self.resets = 0
-        # What the game offered last frame, and whether that has ever changed.
-        # The real engine sets `available_actions` once per game and echoes it;
-        # only our own mock varied it with the player's position.
-        self._offered: frozenset[GameAction] | None = None
-        self._offer_varies = False
-        self._visited: set[tuple[int, Cell]] = set()
-        self._heading: Node | None = None
-        self._level = 0
-        self._closest: int | None = None
-        self._stalled = 0
 
     def choose_action(self, frames: list[FrameData], latest: FrameData) -> GameAction:
         board = latest.frame[0]
         available = actions_from_values(latest.available_actions)
-        offered = frozenset(available)
-        newly_offered = (
-            self._offered is not None
-            and self._interact in offered
-            and self._interact not in self._offered
-        )
-        if self._offered is not None and offered != self._offered:
-            self._offer_varies = True
-        self._offered = offered
-        new_level = latest.levels_completed != self._level
-        if new_level:
-            self._level = latest.levels_completed
-            self._visited.clear()
-            self._heading = None
-        self._learn(board, available, across_levels=new_level)
+        self._learn(board, available)
 
-        # An interaction that has just become possible is the game pointing at
-        # where the player stands. One offered on every frame says nothing, and
-        # pressing it on sight presses it forever: on recorded real boards this
-        # rule spent every action on ACTION5 in all eight games that offer it.
-        if newly_offered:
+        if self._interact in available:
             return self._commit(self._interact, board)
 
-        # Clicks are the clicker's business: the adapter would swap a click with
-        # no target for some other action, and learning would then credit that
-        # action's effect to the click.
-        movers = [
-            a
-            for a in available
-            if a is not GameAction.RESET and a is not self._interact and a not in COMPLEX_ACTIONS
-        ]
+        movers = [a for a in available if a is not GameAction.RESET and a is not self._interact]
         if not movers:
-            fallback = self._interact if self._interact in available else GameAction.RESET
-            return self._commit(fallback, board)
+            return self._commit(GameAction.RESET, board)
 
         mapping = self.control.mapping()
         ready = self.control.confidence() >= self._trust and len(mapping) >= 2
         if not ready:
             return self._commit(self._probe(movers), board)
 
-        planned = self._route(board, movers, available)
+        planned = self._route(board, movers)
         return self._commit(planned or self._probe(movers), board)
 
     # --- learning ----------------------------------------------------------
 
-    def _learn(
-        self, board: Grid, available: list[GameAction], *, across_levels: bool = False
-    ) -> None:
+    def _learn(self, board: Grid, available: list[GameAction]) -> None:
         if self._pending is None or self._before is None:
             return
         action, before = self._pending, self._before
         self._pending = None
-        if across_levels:
-            # The board was replaced by the next level's, and the player put back
-            # at its start: read as a move, that looks like a refusal into
-            # whatever was ahead — which was the goal just reached.
-            self._expected = None
-            return
 
         if action not in (GameAction.RESET, self._interact):
             self._check_prediction(board)
             self.control.observe(before, board, action)
             self._note_obstacle(before, board, action)
 
-        if self._interact in available and self._offer_varies:
+        if self._interact in available:
             self._note_goal(before, board)
 
-        if self._offer_varies:
-            # Only an offer that tracks position says anything about walls; a
-            # fixed offer would mark everything ahead passable, and passable
-            # outranks blocked, so no wall could ever be learned.
-            self._note_walls(board, available)
+        self._note_walls(board, available)
 
     def _note_walls(self, board: Grid, available: list[GameAction]) -> None:
         """Read obstacles off the availability list.
@@ -211,42 +166,29 @@ class NavigatorAgent(BaseAgent):
         # The map does not describe this game. Keep what was learned about
         # walls — obstacles do not stop being obstacles because the controls
         # were misread — and learn the controls again from nothing.
-        self.control = ControlLearner(estimator=self._estimator)
+        self.control = ControlLearner()
         self._predictions.clear()
         self._tried.clear()
         self.resets += 1
 
     def _note_obstacle(self, before: Grid, after: Grid, action: GameAction) -> None:
-        """A refused move names what is in the way; an accepted one, what is not.
+        """A refused move names what is in the way.
 
-        Judged by whether the player advanced along the learned step, not by
-        whether the board changed: on a real board something changes on almost
-        every action (a HUD strip advances each turn), so an unchanged board —
-        the test this used to wait for — never arrives and no wall is learned.
+        Only a completely unchanged board counts: if anything moved, the action
+        did something and the cell ahead is not necessarily a wall.
         """
+        if before != after:
+            player = self._player_cell(after)
+            if player is not None:
+                self.obstacles.record_passable(after[player[0]][player[1]])
+            return
         step = self.control.mapping().get(action)
-        colour = self.control.controlled_colour()
-        if step is None or colour is None:
+        player = self._player_cell(before)
+        if step is None or player is None:
             return
-        direction = (_sign(step[0]), _sign(step[1]))
-        if direction == (0, 0) or 0 not in direction:
-            return  # no clean cardinal direction to look along
-        # Judged by the sprite's two edges along the step, not its centre. An
-        # animating sprite grows an extra cell on one side and loses it again:
-        # read by centroid, a step taken looked like a step refused (the target
-        # was marked a wall) and a refusal looked like a step (a wall was never
-        # learned). A real step moves both edges; a flicker only ever one.
-        advanced = _advanced(before, after, colour, direction)
-        if advanced is None:
-            return
-        ahead = _colours_ahead(before, colour, direction)
-        if not ahead:
-            return
-        terrain = ahead.most_common(1)[0][0]
-        if advanced:
-            self.obstacles.record_passable(terrain)
-        else:
-            self.obstacles.record_blocked(terrain)
+        ahead = (player[0] + step[0], player[1] + step[1])
+        if 0 <= ahead[0] < len(before) and 0 <= ahead[1] < len(before[0]):
+            self.obstacles.record_blocked(before[ahead[0]][ahead[1]])
 
     def _note_goal(self, before: Grid, after: Grid) -> None:
         """Whatever we covered up as an interaction became available is a goal."""
@@ -268,46 +210,13 @@ class NavigatorAgent(BaseAgent):
         pool = unknown or movers
         return min(pool, key=lambda a: (self._tried[a], a.value))
 
-    def _route(
-        self, board: Grid, movers: list[GameAction], available: list[GameAction]
-    ) -> GameAction | None:
+    def _route(self, board: Grid, movers: list[GameAction]) -> GameAction | None:
         player = self._player_cell(board)
-        if player is None:
+        goal = self._goal_cell(board, player)
+        if player is None or goal is None:
             return None
 
-        # Arrival is judged against where we were heading, not against what is
-        # visible now: standing on a small goal covers it, so it vanishes from
-        # the board at the very moment it is reached.
-        heading = self._heading
-        if heading is not None and _standing_on(self._player_cells(board), heading):
-            self._heading = None
-            self._visited.add((heading.colour, heading.top_left))
-            # With a fixed offer nothing announces a goal, so the only way to
-            # learn whether this object is one is to try interacting with it.
-            if self._interact in available and not self._offer_varies:
-                return self._interact
-            return None
-
-        node = self._goal_node(board, player)
-        if node is None:
-            return None
-        if heading is None or (node.colour, node.top_left) != (heading.colour, heading.top_left):
-            self._closest, self._stalled = None, 0
-        self._heading = node
-
-        distance = abs(node.top_left[0] - player[0]) + abs(node.top_left[1] - player[1])
-        if self._closest is None or distance < self._closest:
-            self._closest, self._stalled = distance, 0
-        else:
-            self._stalled += 1
-            if self._stalled > PATIENCE:
-                # Not getting closer: out of reach, or not really there. Leave
-                # it for this level and let the next call pick something else.
-                self._visited.add((node.colour, node.top_left))
-                self._heading, self._closest, self._stalled = None, None, 0
-                return None
-
-        path = find_path(board, player, node.top_left, self.obstacles)
+        path = find_path(board, player, goal, self.obstacles)
         if not path:
             return None
         # Ask for the best available action along the next step rather than an
@@ -338,13 +247,7 @@ class NavigatorAgent(BaseAgent):
             return None
         return round(rows / count), round(cols / count)
 
-    def _player_cells(self, board: Grid) -> set[Cell]:
-        colour = self.control.controlled_colour()
-        if colour is None:
-            return set()
-        return {(r, c) for r, row in enumerate(board) for c, value in enumerate(row) if value == colour}
-
-    def _goal_node(self, board: Grid, player: Cell | None) -> Node | None:
+    def _goal_cell(self, board: Grid, player: Cell | None) -> Cell | None:
         if player is None:
             return None
         seg = segment(board)
@@ -358,16 +261,13 @@ class NavigatorAgent(BaseAgent):
         if self._goal_colours:
             preferred = [n for n in candidates if n.colour in self._goal_colours]
             candidates = preferred or candidates
-        fresh = [n for n in candidates if (n.colour, n.top_left) not in self._visited]
-        if candidates and not fresh:
-            self._visited.clear()  # every object tried: go round again
-            fresh = candidates
-        if not fresh:
+        if not candidates:
             return None
-        return min(
-            fresh,
+        nearest = min(
+            candidates,
             key=lambda n: abs(n.top_left[0] - player[0]) + abs(n.top_left[1] - player[1]),
         )
+        return nearest.top_left
 
     def _commit(self, action: GameAction, board: Grid) -> GameAction:
         self._before = [row[:] for row in board]
@@ -387,55 +287,3 @@ class NavigatorAgent(BaseAgent):
 
 def _colours(board: Grid) -> set[int]:
     return {value for row in board for value in row}
-
-
-def _sign(value: int) -> int:
-    return (value > 0) - (value < 0)
-
-
-def _standing_on(cells: set[Cell], node: Node) -> bool:
-    """Whether any cell of the player lies within the object's bounding box.
-
-    Any cell, not the centre of mass: an animating sprite's extra frame drags
-    the centroid off a one-cell goal on exactly the beat it arrives, so arrival
-    was never seen. And "within", not "next to": counting adjacency had the
-    walker interact with every wall beside it instead of stepping on the goal.
-    """
-    top, left, bottom, right = node.bbox
-    return any(top <= r <= bottom and left <= c <= right for r, c in cells)
-
-
-def _advanced(before: Grid, after: Grid, colour: int, direction: Cell) -> bool | None:
-    """Whether either edge of the `colour` sprite moved forward along `direction`.
-
-    None when the sprite is missing from either board, so there is no reading.
-    """
-    def extent(board: Grid) -> tuple[int, int] | None:
-        along = [
-            r * direction[0] + c * direction[1]
-            for r, row in enumerate(board)
-            for c, value in enumerate(row)
-            if value == colour
-        ]
-        return (min(along), max(along)) if along else None
-
-    start, end = extent(before), extent(after)
-    if start is None or end is None:
-        return None
-    return end[0] > start[0] or end[1] > start[1]
-
-
-def _colours_ahead(board: Grid, colour: int, direction: Cell) -> Counter[int]:
-    """Colours of the cells just past the sprite's leading edge in `direction`.
-
-    The centroid plus one step lands inside any sprite bigger than a cell, so
-    the cell in the way is found from the edge of the sprite, not its centre.
-    """
-    cells = {(r, c) for r, row in enumerate(board) for c, value in enumerate(row) if value == colour}
-    height, width = len(board), len(board[0]) if board else 0
-    ahead: Counter[int] = Counter()
-    for r, c in cells:
-        nr, nc = r + direction[0], c + direction[1]
-        if (nr, nc) not in cells and 0 <= nr < height and 0 <= nc < width:
-            ahead[board[nr][nc]] += 1
-    return ahead

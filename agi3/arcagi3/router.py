@@ -25,6 +25,17 @@ DIRECTIONS = frozenset(
 CLICK = GameAction.ACTION6.value
 
 
+def walker() -> BaseAgent:
+    """The navigator with the `fallback` estimator.
+
+    Of the three estimators it is the only one that clears every mock arena,
+    including noise with a fixed action list and scrambled controls (see
+    docs/static-actions.md), at a cost of two points of mapping accuracy on
+    recorded real boards: 77% against the centroid's 79%.
+    """
+    return NavigatorAgent(estimator="fallback")
+
+
 class RoutingAgent(BaseAgent):
     """Delegates to a walker when directions are offered, else to a clicker."""
 
@@ -32,7 +43,7 @@ class RoutingAgent(BaseAgent):
 
     def __init__(
         self,
-        walker: Callable[[], BaseAgent] = NavigatorAgent,
+        walker: Callable[[], BaseAgent] = walker,
         clicker: Callable[[], BaseAgent] = ClickAgent,
     ) -> None:
         self._walker = walker
