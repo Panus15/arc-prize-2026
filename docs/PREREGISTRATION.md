@@ -44,6 +44,29 @@ different games, so absolute level counts do not carry over; **the ordering does
 4. Only after that, tune the agent against real games, in separate commits, and
    report tuned results as a separate, clearly labelled measurement.
 
+## Addendum, same day: a second agent, also registered before any real game
+
+After `dc949b4` was frozen, replaying the 500 recorded real runs through it showed
+that in every walking game offering ACTION5 it pressed ACTION5 on 97-100% of turns
+(`docs/static-actions.md`). That was found from recorded data, **still before any
+real game file was obtained**. The fixed agent is registered here as a second,
+separate measurement. Nothing about agent A or its protocol changes.
+
+| | Agent A (as registered above) | Agent B |
+|---|---|---|
+| commit | `dc949b4` | **`fb5e2fb66ff1556608b3af82d74ec07e0c8b1271`** (25 Sep 2026 13:07 UTC) |
+| `agi3/arcagi3/` tree | `883e848…` | `7a53d598b27913c9aed88331a3dbdd824b264ade` |
+| `agi3/submission/my_agent.py` | `c4c1bc9…` | `bb12140f2a07cbf1d3e016784a315c95eefd3df9` |
+
+Protocol for B is the same as for A, with A run first: both at the 400-action cap
+against seeded random, both results committed unedited, and tuning on real games
+only afterwards in separate commits. B's `MAX_ACTIONS` of 2,000 is the Kaggle
+setting; the comparison uses 400 for both so they are measured alike.
+
+What B changes, and what it does not claim: on recorded real boards its ACTION5
+share is 0-10% and it made 0 errors in 500 passes; in six mock arenas it clears
+every one. Whether it clears **real** levels is exactly what is not yet known.
+
 ## Why a file and not a git tag
 
 A tag `prereg-real-games` was created on `dc949b4` but this development

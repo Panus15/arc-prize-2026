@@ -76,13 +76,13 @@ games. A policy built on that mapping finishes no levels once the board is
 noisy. Component accuracy is not playing ability, and reporting the former as
 the latter — which we did — overstates what has been shown.
 
-Across 18 configurations, simulated and real scores correlate at −0.93 — a
-figure we will not quote that way, since the simulated column takes two values
-set by one design choice and the other two parameters move it not at all. Stated
-correctly it is sharper: the simulator discriminates on one axis of three, ranks
-it backwards, and acts as a pass-fail gate rather than a signal to tune against.
+Across 18 configurations, simulated and real scores correlate at −0.93, a figure
+we will not quote: one design choice sets the simulated column's two values, and
+the other parameters move it not at all. Correctly stated, the simulator
+discriminates on one axis of three, ranks it backwards, and acts as a pass-fail
+gate, not a signal to tune against.
 
-## 4. Four failures, and the mechanism behind each  *(~300 words)*
+## 4. Five failures, and the mechanism behind each  *(~340 words)*
 
 Each looked settled in one arena and failed in the next. Each was caught by
 testing against data we had not generated. The mechanisms, not the anecdotes,
@@ -112,15 +112,17 @@ observation whenever nothing lines up, which on real frames is often. Falling
 back to the centre of mass recovers 22 of those 24 points, at 77%, while still
 clearing the noisy mock.
 
+**Five.** Replaying recorded real boards through the agent we were about to
+submit, it pressed ACTION5 on 97–100% of turns in all eight walking games
+offering it. *Mechanism:* our environment offered interaction only on the goal;
+the real engine fixes the action list for a whole game.
+
 An ablation says which noise matters. Animating the controlled object alone
 defeats the policy; animating the goal, or every small object, or adding the HUD,
 costs nothing. More noise made the test easier. It is not noise that defeats
 learning, but noise on the signal being learned from.
 
 ## 5. What probing costs  *(~180 words)*
-
-Because every action is scored, the price of establishing the rules is a
-constraint, not a detail.
 
 A mapping correct about two directions costs a median of 12 observations.
 Average accuracy across all recovered mappings needs far more — 56% at 10
@@ -132,10 +134,9 @@ The learner's own confidence is a usable filter with a sharp threshold. Below
 0.6 its mapping is 36% accurate; above it, 84–85%. Waiting for more confidence
 buys no accuracy while costing actions.
 
-Deliberate probing helps moderately. Replaying the same evidence in a balanced
-order lowers the median cost from 12 observations to 10 and learns sooner in 7
-of 11 games — but one game doubles in cost, and the number of games learnable at
-all does not change.
+Deliberate probing helps only moderately: a balanced order cuts the median from
+12 observations to 10, but one game doubles in cost and no new game becomes
+learnable.
 
 ## 6. How far this generalises  *(~200 words)*
 
@@ -164,7 +165,7 @@ The noise ships as a wrapper around any environment returning `FrameData`, each
 property switchable so a failure can be attributed to one rather than to noise in
 general. It runs against another team's agent unchanged.
 
-Three checks would have caught all four failures. We offer them as a minimum
+Three checks would have caught all five failures. We offer them as a minimum
 before believing an agent works:
 
 1. Test against data you did not generate — recordings, traces, a live game.

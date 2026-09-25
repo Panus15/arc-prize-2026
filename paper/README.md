@@ -42,7 +42,7 @@ headroom (worst case)     +19
 | § | คำ | รับใช้เกณฑ์ |
 |---|---:|---|
 | 3 ช่องว่าง simulation | 282 | Theory · Novelty |
-| 4 สี่ความล้มเหลว + กลไก | 299 | **Theory** |
+| 4 ห้าความล้มเหลว + กลไก | ~340 | **Theory** |
 | 5 งบ probe | 154 | Theory · Progress |
 | **6 ใช้ได้กว้างแค่ไหน** | **192** | **Universality** ← เพิ่มใหม่ |
 | 7 เครื่องมือ + ทำซ้ำได้ | 154 | **Progress · Completeness** |
