@@ -38,6 +38,9 @@ What the adapter fixes up between the real API and our policies:
 * the real API offers a different action set per frame, and spending an action
   the game refuses is pure waste.
 * `ACTION6` needs a coordinate payload that a bare `GameAction` cannot carry.
+* that payload lives on the `GameAction` enum member, one object shared by
+  every agent in the process, and the runner's `Swarm` plays every game on its
+  own thread at once — so each agent sends the coordinates it chose itself.
 """
 
 from __future__ import annotations
@@ -46,6 +49,7 @@ from collections.abc import Callable, Iterable, Sequence
 from typing import Protocol, runtime_checkable
 
 from arcengine import FrameData, GameAction, GameState
+from arcengine.enums import ComplexAction
 
 from arcagi3.actions import COMPLEX_ACTIONS, action_from_value
 from arcagi3.agent import BaseAgent
@@ -224,20 +228,49 @@ class SDKPolicyAdapter:
 
     def _with_payload(self, chosen: GameAction, available: Sequence[GameAction]) -> GameAction:
         """Attach a click target to a complex action, or pick something simpler."""
+        self._click = None
         if chosen not in COMPLEX_ACTIONS:
             return chosen
 
         target = self._mouse_target()
         if target is not None:
             try:
-                return mouse_action(*target)
+                return self._clicking(*target)
             except ValueError:
                 pass  # off-board target: treat it as no target at all
 
         simple = fallback_action(available, exclude=COMPLEX_ACTIONS)
         if simple is not GameAction.RESET or GameAction.RESET in available:
             return simple
-        return mouse_action(*self.default_mouse_target)
+        return self._clicking(*self.default_mouse_target)
+
+    def _clicking(self, row: int, col: int) -> GameAction:
+        """`mouse_action`, with the target also kept on this agent."""
+        action = mouse_action(row, col)
+        self._click = (row, col)
+        return action
+
+    def do_action_request(self, action: GameAction) -> FrameData:
+        """Send a click with the coordinates this agent chose, not the shared ones.
+
+        The runner's own version reads the payload off the `GameAction` member,
+        which every agent in the process shares. `Swarm` gives each game its own
+        thread, so between one agent setting its click and the runner reading it
+        back, another game's agent can overwrite it — the click then lands where
+        a different game wanted it. Both environment wrappers take the payload
+        as an argument, so passing ours explicitly removes the shared read.
+
+        Anything that is not one of our clicks goes through the runner unchanged.
+        """
+        click = getattr(self, "_click", None)
+        env = getattr(self, "arc_env", None)
+        convert = getattr(self, "_convert_raw_frame_data", None)
+        if action not in COMPLEX_ACTIONS or click is None or env is None or convert is None:
+            # Not our click, or a runner version without these hooks: its own path.
+            return super().do_action_request(action)  # type: ignore[misc]
+        row, col = click
+        data = ComplexAction(x=col, y=row).model_dump()
+        return convert(env.step(action, data=data, reasoning=None))
 
     def _mouse_target(self) -> tuple[int, int] | None:
         """Ask the policy where its complex action points, if it can say."""

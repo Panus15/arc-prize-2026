@@ -1,0 +1,7 @@
+{
+  "game_id": "tc01-00000001",
+  "title": "Test click (synthetic fixture)",
+  "tags": ["fixture"],
+  "baseline_actions": [3, 3],
+  "class_name": "Tc01"
+}

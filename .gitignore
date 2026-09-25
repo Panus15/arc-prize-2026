@@ -15,6 +15,15 @@ htmlcov/
 # External dataset checkouts — fetched by setup scripts, never vendored
 arc2/ARC-AGI-2/
 
+# ARC-AGI-3 game source files belong to ARC Prize, not to this MIT-0 repo.
+# Downloaded by agi3/scripts/fetch_games.py; share only via a private repo.
+environment_files/
+# ...except our own synthetic fixtures, which are ours and are tested
+!agi3/tests/fixtures/environment_files/
+# The official runner, fetched by agi3/scripts/vendor_framework.sh
+agi3/vendor/
+recordings/
+
 # Evaluation run dumps (keep the ones you cite, by force-adding them)
 runs/
 

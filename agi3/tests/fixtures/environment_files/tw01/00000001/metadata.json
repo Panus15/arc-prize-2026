@@ -1,0 +1,7 @@
+{
+  "game_id": "tw01-00000001",
+  "title": "Test walk (synthetic fixture)",
+  "tags": ["fixture"],
+  "baseline_actions": [10, 20],
+  "class_name": "Tw01"
+}
