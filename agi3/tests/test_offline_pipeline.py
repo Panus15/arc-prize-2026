@@ -49,6 +49,9 @@ def test_the_submitted_agent_plays_a_game_from_disk(tmp_path: Path, capsys) -> N
         assert game["levels_completed"] == game["win_levels"] == 2, game_id
     # tc02 offers directions, so it is walked first and cleared only by switching.
     assert by_id["tc02"]["used"] == ["navigator", "clicker"]
+    assert by_id["tc02"]["levels_by_policy"] == {"clicker": 2}
+    # ...and so it adds nothing to the walker's side of the mock comparison.
+    assert result["mock_comparison"]["ours"] == 2  # tw01 only
     assert ours["score"] > 0  # the official scorecard was computed
     for game in floor["games"]:
         assert game["levels_completed"] <= by_id[game["game_id"]]["levels_completed"]
@@ -68,7 +71,8 @@ def test_an_empty_directory_is_refused(tmp_path: Path, capsys) -> None:
 
 
 def _results(walked: list[tuple[str, int, int]], clicked: int = 0) -> dict:
-    ours = [{"game_id": g, "policy": "navigator", "levels_completed": o} for g, o, _ in walked]
+    ours = [{"game_id": g, "policy": "navigator", "levels_completed": o,
+             "levels_by_policy": {"navigator": o}} for g, o, _ in walked]
     floor = [{"game_id": g, "policy": "random", "levels_completed": r} for g, _, r in walked]
     ours += [{"game_id": f"c{i}", "policy": "clicker", "levels_completed": 9} for i in range(clicked)]
     floor += [{"game_id": f"c{i}", "policy": "random", "levels_completed": 0} for i in range(clicked)]

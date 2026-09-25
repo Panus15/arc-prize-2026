@@ -9,6 +9,7 @@ on the first frame that has any, and kept for the rest of the game.
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Callable
 
 from arcengine import FrameData, GameAction, GameState
@@ -69,6 +70,8 @@ class RoutingAgent(BaseAgent):
         self.chosen: BaseAgent | None = None
         #: Names of the policies used, in the order first used.
         self.used: list[str] = []
+        #: Levels cleared, by the name of the policy in charge when it happened.
+        self.levels_by: Counter[str] = Counter()
 
     def _plan(self, latest: FrameData) -> list[str]:
         offered = set(latest.available_actions or ())
@@ -97,6 +100,8 @@ class RoutingAgent(BaseAgent):
             self._use(self._modes[0])
 
         if latest.levels_completed != self._level:
+            if latest.levels_completed > self._level and self.chosen is not None:
+                self.levels_by[self.chosen.name] += latest.levels_completed - self._level
             self._level = latest.levels_completed
             self._since_progress = 0
         elif len(self._modes) > 1 and self._since_progress >= self._stall_budget:

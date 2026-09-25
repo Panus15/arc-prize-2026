@@ -305,3 +305,13 @@ def test_the_clicker_never_presses_action5_when_not_offered():
     clicker = ClickAgent()
     f = frame((6,)).model_copy(update={"frame": [board]})
     assert GameAction.ACTION5 not in [clicker.choose_action([], f) for _ in range(20)]
+
+
+def test_levels_are_credited_to_the_policy_in_charge():
+    router = two_mode_router(budget=3)
+    router.choose_action([], levelled((1, 2, 3, 4, 6), 0))
+    router.choose_action([], levelled((1, 2, 3, 4, 6), 1))  # cleared while walking
+    for _ in range(4):
+        router.choose_action([], levelled((1, 2, 3, 4, 6), 1))  # stalls, switches
+    router.choose_action([], levelled((1, 2, 3, 4, 6), 2))  # cleared while clicking
+    assert router.levels_by == {"walk-stub": 1, "click-stub": 1}

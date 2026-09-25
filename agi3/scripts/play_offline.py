@@ -86,6 +86,7 @@ def play(arcade, agent_class, name: str, games: list[str]) -> dict:
                 # the pre-registered comparison. `used` shows any switch after.
                 "policy": used[0],
                 "used": used,
+                "levels_by_policy": _levels_by_policy(router, final.levels_completed),
                 "state": final.state.name,
                 "levels_completed": final.levels_completed,
                 "win_levels": final.win_levels,
@@ -96,12 +97,39 @@ def play(arcade, agent_class, name: str, games: list[str]) -> dict:
     return {"score": scorecard.score if scorecard else None, "games": per_game}
 
 
+def _levels_by_policy(router, levels_completed: int) -> dict[str, int] | None:
+    """Levels per policy, including the one that ended the game.
+
+    The router credits a level when it next sees a frame, but the level that
+    wins the game ends the runner's loop first, so it is never seen there. It
+    belongs to whichever policy chose the last action: the one still in charge.
+    """
+    split = getattr(router, "levels_by", None)
+    if split is None:
+        return None
+    split = dict(split)
+    missing = levels_completed - sum(split.values())
+    chosen = getattr(router, "chosen", None)
+    if missing > 0 and chosen is not None:
+        split[chosen.name] = split.get(chosen.name, 0) + missing
+    return split
+
+
+def _walker_levels(game: dict) -> int:
+    split = game.get("levels_by_policy")
+    if split is None:
+        return game["levels_completed"]
+    return split.get("navigator", 0)
+
+
 def compare_with_mock(results: dict) -> dict:
     """Does random still beat our walker on real walked games, as on the mock?"""
     ours_by_game = {g["game_id"]: g for g in results["myagent"]["games"] if "error" not in g}
     walked = [gid for gid, g in ours_by_game.items() if g["policy"] == "navigator"]
     floor = {g["game_id"]: g for g in results["random"]["games"] if "error" not in g}
-    ours = sum(ours_by_game[g]["levels_completed"] for g in walked)
+    # Only levels the walker itself cleared: a game that started walking may
+    # have switched to clicking, and the mock says nothing about clicks.
+    ours = sum(_walker_levels(ours_by_game[g]) for g in walked)
     random_levels = sum(floor[g]["levels_completed"] for g in walked if g in floor)
     if not walked:
         outcome = "no walked games - nothing to compare"
