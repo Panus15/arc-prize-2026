@@ -29,9 +29,12 @@ from pathlib import Path
 AGI3 = Path(__file__).resolve().parents[1]
 RUNNER = AGI3 / "vendor" / "ARC-AGI-3-Agents"
 
-# Prediction recorded in the writeup before any real game was played: the
-# policies that clear nothing on the noise-calibrated mock clear nothing live.
-PREDICTED_LEVELS = 0
+# What the noise-calibrated mock said (docs/simulation-gap.md, commit 4af7cf0):
+# seeded random cleared 2/3, our navigator 0/3. The games differ, so only the
+# ordering carries over. The writeup (section 6) predicts a further gap between
+# that environment and real games: a reversed ordering would be that gap, an
+# unchanged one would count against the prediction.
+MOCK = {"random": 2, "navigator": 0, "levels": 3}
 
 
 def load_agents(max_actions: int) -> dict[str, type]:
@@ -74,9 +77,11 @@ def play(arcade, agent_class, name: str, games: list[str]) -> dict:
         )
         agent.main()
         final = agent.frames[-1]
+        chosen = getattr(getattr(agent, "policy", None), "chosen", None)
         per_game.append(
             {
                 "game_id": game_id,
+                "policy": chosen.name if chosen is not None else name,
                 "state": final.state.name,
                 "levels_completed": final.levels_completed,
                 "win_levels": final.win_levels,
@@ -85,6 +90,25 @@ def play(arcade, agent_class, name: str, games: list[str]) -> dict:
         )
     scorecard = arcade.close_scorecard(card)
     return {"score": scorecard.score if scorecard else None, "games": per_game}
+
+
+def compare_with_mock(results: dict) -> dict:
+    """Does random still beat our walker on real walked games, as on the mock?"""
+    ours_by_game = {g["game_id"]: g for g in results["myagent"]["games"] if "error" not in g}
+    walked = [gid for gid, g in ours_by_game.items() if g["policy"] == "navigator"]
+    floor = {g["game_id"]: g for g in results["random"]["games"] if "error" not in g}
+    ours = sum(ours_by_game[g]["levels_completed"] for g in walked)
+    random_levels = sum(floor[g]["levels_completed"] for g in walked if g in floor)
+    if not walked:
+        outcome = "no walked games - nothing to compare"
+    elif ours == random_levels:
+        outcome = "tied - no evidence either way"
+    elif random_levels > ours:
+        outcome = "held - random still ahead, as on the mock (counts against a further gap)"
+    else:
+        outcome = "REVERSED - our walker ahead of random (the further gap section 6 predicts)"
+    return {"walked_games": len(walked), "ours": ours, "random": random_levels,
+            "outcome": outcome, "mock": MOCK}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -143,19 +167,23 @@ def main(argv: list[str] | None = None) -> int:
         levels = sum(r.get("levels_completed", 0) for r in result["games"])
         print(f"{name:<8} levels cleared {levels:>4}   scorecard {result['score']}")
 
-    ours = sum(r.get("levels_completed", 0) for r in results["myagent"]["games"])
-    print(f"\nprediction on record: {PREDICTED_LEVELS} levels for our agent on real games")
-    if ours <= PREDICTED_LEVELS:
-        print("outcome: prediction held")
-    else:
-        print(f"outcome: PREDICTION FAILED — our agent cleared {ours}")
+    comparison = compare_with_mock(results)
+    print(
+        f"\ncalibrated mock: random {MOCK['random']}/{MOCK['levels']}, "
+        f"navigator {MOCK['navigator']}/{MOCK['levels']} - random ahead"
+    )
+    print(
+        f"walked games here ({comparison['walked_games']}): "
+        f"ours {comparison['ours']} levels, random {comparison['random']}"
+    )
+    print(f"ordering: {comparison['outcome']}  (only the ordering compares; the games differ)")
 
     if args.json_out:
         payload = {
             "max_actions": args.max_actions,
             "games": games,
             "results": results,
-            "prediction": {"levels": PREDICTED_LEVELS, "observed": ours},
+            "mock_comparison": comparison,
         }
         args.json_out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
         print(f"\nwrote {args.json_out}")

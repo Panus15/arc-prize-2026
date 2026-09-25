@@ -96,17 +96,13 @@ def test_empty_directory_is_reported_not_crashed(tmp_path: Path, capsys) -> None
     assert "no *.recording.jsonl" in capsys.readouterr().out
 
 
-def test_prediction_held_when_nothing_was_cleared(tmp_path: Path, capsys) -> None:
-    write_recording(tmp_path, "ls20", steps=[(1, 0), (2, 0)], final_state="GAME_OVER")
-    assert main([str(tmp_path)]) == 0
-    assert "prediction held" in capsys.readouterr().out
-
-
-def test_prediction_failing_is_stated_plainly(tmp_path: Path, capsys) -> None:
-    """A cleared level would refute the paper's own prediction, and must say so."""
+def test_no_verdict_is_drawn_without_a_floor(tmp_path: Path, capsys) -> None:
+    """A recording alone cannot test the mock: that needs random on the same games."""
     write_recording(tmp_path, "ls20", steps=[(1, 1)], final_state="GAME_OVER")
     assert main([str(tmp_path)]) == 0
-    assert "PREDICTION FAILED" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "prediction" not in out.lower()
+    assert "play_offline.py" in out
 
 
 def test_json_out_round_trips(tmp_path: Path) -> None:

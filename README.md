@@ -13,11 +13,14 @@
 | ARC-AGI-2 loader + evaluation harness | ✅ เสร็จ |
 | ARC-AGI-2 rule baselines (14 ตัว) | ✅ วัดจริงแล้ว — `docs/baselines.md` |
 | สถิติชุดข้อมูล · สืบกติกา | ✅ `docs/dataset-analysis.md` · `docs/competition-brief.md` |
-| **ARC-AGI-3 agent** | ✅ 19 โมดูล · **196 เทสผ่าน** → `agi3/` |
+| **ARC-AGI-3 agent** | ✅ **224 เทสผ่าน** → `agi3/` |
 | **Paper Track writeup** | 🟡 §2–8 ครบ (1,432 คำ) · §1 ปิดท้าย + §8 รอผลเกมสด |
 | **cover image + public notebook** | ✅ `paper/cover.png` · `paper/notebook.ipynb` (รันได้ไม่ต่อเน็ต) |
-| **เชื่อมเกมสด ARC-AGI-3** | ⛔ **ยังไม่เคยเชื่อม** — container นี้ต่อ `arcprize.org` ไม่ได้ · คู่มือรันเองอยู่ที่ [`docs/live-run.md`](docs/live-run.md) |
+| **Kaggle submission (ARC-AGI-3)** | 🟡 notebook พร้อมอัปโหลด · จำลอง Kaggle ครบ 2 รอบผ่าน · **ยังไม่ได้ submit** |
+| **เกมจริง** | ⛔ ยังไม่เคยรัน — ต้องดาวน์โหลดไฟล์เกมครั้งเดียวจากเครื่องที่ต่อ `arcprize.org` ได้ |
 | **สิทธิ์เข้าแข่ง (ผู้เยาว์)** | ⛔ ต้องถาม Sponsor · ร่างอีเมลพร้อมส่งที่ [`docs/eligibility-minor.md`](docs/eligibility-minor.md) |
+
+**สิ่งที่เจ้าของโครงการต้องทำ ทีละขั้น: [`docs/YOUR-STEPS.md`](docs/YOUR-STEPS.md)**
 
 แผนงานเต็ม สิ่งที่ทำแล้วพร้อมผล และสิ่งที่เหลือ: [`docs/ROADMAP.md`](docs/ROADMAP.md)
 
@@ -52,14 +55,15 @@ rule-based solver ทั้ง 14 ตัวได้ **0.00% บนชุด eva
 
 ```
 arc-prize-2026/
-├── docs/                     18 ไฟล์ — ทุกไฟล์มีตัวเลขที่วัดจริง + คำสั่งทำซ้ำ
+├── docs/                     ทุกไฟล์มีตัวเลขที่วัดจริง + คำสั่งทำซ้ำ
+│   ├── YOUR-STEPS.md         สิ่งที่เจ้าของโครงการต้องทำ ทีละขั้น
 │   ├── ROADMAP.md            แผนงาน · สิ่งที่ทำแล้วและผล · สิ่งที่เหลือ  ← เริ่มอ่านที่นี่
 │   ├── simulation-gap.md     ผลหลักของโครงงาน
 │   ├── competition-brief.md  กติกาทั้ง 3 สนาม พร้อมแหล่งอ้างอิงรายข้อ
 │   ├── baselines.md          ผลวัด baseline จริง
 │   └── dataset-analysis.md   สถิติ ARC-AGI-2 ทั้ง 1,120 task
 ├── arc2/                     งาน ARC-AGI-2 (loader, harness, solvers, tests)
-├── agi3/                     ARC-AGI-3 agent — สนามหลัก (19 โมดูล · 196 เทส)
+├── agi3/                     ARC-AGI-3 agent — สนามหลัก · submission/kaggle/ = notebook พร้อมส่ง
 └── paper/                    writeup · notebook · cover · ข้อมูลที่ฝังไปกับเปเปอร์
 ```
 

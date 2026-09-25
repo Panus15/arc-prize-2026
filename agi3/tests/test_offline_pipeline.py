@@ -63,3 +63,29 @@ def test_an_empty_directory_is_refused(tmp_path: Path, capsys) -> None:
     import play_offline
 
     assert play_offline.main([str(tmp_path)]) == 2
+
+
+def _results(walked: list[tuple[str, int, int]], clicked: int = 0) -> dict:
+    ours = [{"game_id": g, "policy": "navigator", "levels_completed": o} for g, o, _ in walked]
+    floor = [{"game_id": g, "policy": "random", "levels_completed": r} for g, _, r in walked]
+    ours += [{"game_id": f"c{i}", "policy": "clicker", "levels_completed": 9} for i in range(clicked)]
+    floor += [{"game_id": f"c{i}", "policy": "random", "levels_completed": 0} for i in range(clicked)]
+    return {"myagent": {"games": ours}, "random": {"games": floor}}
+
+
+def test_mock_comparison_uses_walked_games_only():
+    """Clicked games are not what the mock modelled, so they must not sway it."""
+    import play_offline
+
+    result = play_offline.compare_with_mock(_results([("w1", 0, 1)], clicked=3))
+    assert result["walked_games"] == 1
+    assert result["outcome"].startswith("held")
+
+
+def test_mock_comparison_outcomes():
+    import play_offline
+
+    compare = play_offline.compare_with_mock
+    assert compare(_results([("w1", 2, 0)]))["outcome"].startswith("REVERSED")
+    assert compare(_results([("w1", 1, 1)]))["outcome"].startswith("tied")
+    assert compare(_results([]))["outcome"].startswith("no walked games")

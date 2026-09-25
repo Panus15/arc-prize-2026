@@ -104,14 +104,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f"levels cleared {levels}")
     print(f"actions spent  {actions}")
 
-    # The paper's own prediction: a policy that clears 0/3 on the
-    # noise-calibrated mock should also clear nothing live.  State the
-    # comparison rather than leaving it to be eyeballed.
-    print("\nprediction on record: 0 levels (our policies clear 0/3 on the noisy mock)")
-    if levels == 0:
-        print("outcome: prediction held — the live game is at least as hard as the mock")
-    else:
-        print(f"outcome: PREDICTION FAILED — cleared {levels}; the mock was too harsh")
+    # No verdict here on purpose: a recording has no floor to compare against,
+    # and the mock's result only carries over as an ordering against random.
+    print("\nfor the comparison with the calibrated mock, use scripts/play_offline.py")
 
     if args.json_out:
         args.json_out.write_text(
