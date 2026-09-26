@@ -13,7 +13,7 @@
 | ARC-AGI-2 loader + evaluation harness | ✅ เสร็จ |
 | ARC-AGI-2 rule baselines (14 ตัว) | ✅ วัดจริงแล้ว — `docs/baselines.md` |
 | สถิติชุดข้อมูล · สืบกติกา | ✅ `docs/dataset-analysis.md` · `docs/competition-brief.md` |
-| **ARC-AGI-3 agent** | ✅ **246 เทสผ่าน** · เล่นกระดานจริง 500 รอบไม่พังเลย → `agi3/` |
+| **ARC-AGI-3 agent** | ✅ **250 เทสผ่าน** · เล่นกระดานจริง 500 รอบไม่พังเลย → `agi3/` |
 | **Paper Track writeup** | 🟡 §2–8 ครบ (1,432 คำ) · §1 ปิดท้าย + §8 รอผลเกมสด |
 | **cover image + public notebook** | ✅ `paper/cover.png` · `paper/notebook.ipynb` (รันได้ไม่ต่อเน็ต) |
 | **Kaggle submission (ARC-AGI-3)** | 🟡 notebook พร้อมอัปโหลด · จำลอง Kaggle ครบ 2 รอบผ่าน · **ยังไม่ได้ submit** |
