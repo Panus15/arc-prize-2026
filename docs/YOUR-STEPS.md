@@ -202,6 +202,19 @@ SELF-CHECK PASSED
 
 ---
 
+## ตอนส่งเปเปอร์ (ยังไม่ต้องทำตอนนี้)
+
+เมื่อเปเปอร์เสร็จ ผมจะบอก แล้วคุณทำแค่นี้:
+
+1. อัปโหลด `paper/notebook.ipynb` เข้า Kaggle แบบเดียวกับขั้น 3.2–3.4
+   (ผูก input การแข่ง ARC-AGI-3 — notebook ติดตั้ง `arc-agi` จาก wheel ของการแข่งเอง ไม่ต้องต่อเน็ต)
+2. Save & Run All → ตั้งเป็น **Public**
+3. หน้า Writeup: ใส่ลิงก์ notebook นี้ใน **Project Links** · แนบ `paper/cover.png` เป็น cover image
+   · วางเนื้อจาก `paper/writeup-draft.md`
+
+notebook นี้ผมทดสอบแล้วใน kernel Python 3.12 ที่ **ไม่มี** `arc-agi` ติดตั้งมาก่อน (เหมือน Kaggle):
+ติดตั้งจาก wheel ได้เอง รันครบทุกเซลล์ ไม่มี error
+
 ## สิ่งที่ผมจะทำเองทันทีที่ได้ของ
 
 ### เมื่อได้ขั้น 2 (ไฟล์เกม)
