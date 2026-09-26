@@ -49,10 +49,10 @@ Neither policy is the contribution. What they produced is.
 
 ## 3. Simulation does not predict reality  *(~280 words)*
 
-Every policy runs in two arenas: the quiet environment we first wrote, and one
-carrying noise measured from recorded games — a HUD strip advancing every action,
-sprites changing shape as they move, and so a board that changes on essentially
-every action.
+Every policy, as first built, runs in two arenas: the quiet environment we first
+wrote, and one carrying noise measured from recorded games — a HUD strip
+advancing every action, sprites changing shape as they move, and so a board that
+changes on essentially every action.
 
 ```
 policy       learns?        quiet mock   noise-calibrated mock
@@ -149,7 +149,7 @@ learning reads displacement, the click policy reads board change — yet both we
 defeated the same way, by different noise: the simulator represented their signal
 more cleanly than reality does. That is not one method's quirk.
 
-The third failure sharpens this into something uncomfortable for any simulator-
+The fourth failure sharpens this into something uncomfortable for any simulator-
 built agent. Our second environment was calibrated from statistics measured over
 500 recorded runs, and still selected the worse of two designs. Matching measured
 statistics is not sufficient: the statistics one chooses to match come from the
@@ -183,8 +183,9 @@ that produced it — including the figures that contradict our earlier claims.
 ## 8. Limitations  *(~60 words — needs the live run)*
 
 Everything was measured against recorded games and environments we wrote. Our
-policies do not clear a realistically noisy board. One recorded game completes
-nothing in 676 clicks, suggesting some games need a sequence or a relative
-position rather than a colour, which our methods cannot express.
+submitted walker clears realistically noisy boards only in environments we
+wrote. One recorded game completes nothing in 676 clicks, suggesting some games
+need a sequence or a relative position rather than a colour, which our methods
+cannot express.
 
 > เติมหลังรันเกมสด: ผลจริง · ช่องว่างชั้นที่ 5 เจอหรือไม่
