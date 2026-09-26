@@ -100,7 +100,7 @@ def cells() -> list[dict]:
 
         sys.path.insert(0, str(pathlib.Path("{PKG}").parent))
         DATA = pathlib.Path("{DATA_TMP}")
-        print(f"library: {len(modules)} modules · data:", sorted(p.name for p in DATA.iterdir()))
+        print("library: {len(modules)} modules · data:", sorted(p.name for p in DATA.iterdir()))
         """),
         md("""
         ## 1. Simulation does not predict reality
@@ -242,6 +242,7 @@ def cells() -> list[dict]:
         """),
         py("""
         from arcengine import GameAction
+
         from arcagi3.router import walker as submitted_walker
 
         SCRAMBLED = {GameAction.ACTION1: (0, 1), GameAction.ACTION2: (0, -1),
