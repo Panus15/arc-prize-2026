@@ -69,3 +69,15 @@ def test_nothing_local_leaks_into_the_notebook():
     for line in source.splitlines():
         if "ARC_API_KEY=" in line:
             assert "ARC_API_KEY=test-key-123" in line
+
+
+def test_the_self_check_confirms_what_the_rerun_will_look_up():
+    """`main.py --agent myagent` resolves through AVAILABLE_AGENTS; check that name."""
+    source = COMMITTED.read_text(encoding="utf-8")
+    assert 'AVAILABLE_AGENTS.get(\\"myagent\\") is MyAgent' in source
+
+
+def test_an_older_runner_does_not_block_the_submission():
+    """Without arc_env the fixture cannot be hosted; the check narrows, not fails."""
+    source = COMMITTED.read_text(encoding="utf-8")
+    assert "SELF-CHECK PASSED (import only)" in source

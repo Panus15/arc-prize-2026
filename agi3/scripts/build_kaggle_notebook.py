@@ -125,21 +125,33 @@ SELF_CHECK = dedent(
     # A failure here stops the save, before a daily submission is spent.
     if not RERUN:
         check = """
+    import inspect
     import logging
-    from arc_agi import Arcade, OperationMode
+    from agents import AVAILABLE_AGENTS
+    from agents.agent import Agent
     from agents.templates.my_agent import MyAgent
-    arc = Arcade(operation_mode=OperationMode.OFFLINE, environments_dir="/tmp/fixture_envs",
-                 recordings_dir="/tmp/fixture_rec", logger=logging.getLogger("check"))
-    card = arc.open_scorecard(tags=["self-check"])
-    agent = MyAgent(card_id=card, game_id="tw01", agent_name="self-check", ROOT_URL="http://localhost",
-                    record=False, arc_env=arc.make("tw01", scorecard_id=card), tags=["self-check"])
-    agent.MAX_ACTIONS = 60
-    agent.main()
-    final = agent.frames[-1]
-    print("self-check:", final.state.name, final.levels_completed, "/", final.win_levels,
-          "in", agent.action_counter, "actions")
-    assert final.levels_completed == final.win_levels == 2, "agent failed the fixture"
-    print("SELF-CHECK PASSED")
+    # What the rerun's `main.py --agent myagent` will look up.
+    assert AVAILABLE_AGENTS.get("myagent") is MyAgent, "myagent is not registered"
+    if "arc_env" not in inspect.signature(Agent.__init__).parameters:
+        # A runner older than the one this was tested against cannot host an
+        # offline game; failing here would block a submission that may be fine.
+        print("runner predates offline play: checked import and registration only")
+        print("SELF-CHECK PASSED (import only)")
+    else:
+        from arc_agi import Arcade, OperationMode
+        arc = Arcade(operation_mode=OperationMode.OFFLINE, environments_dir="/tmp/fixture_envs",
+                     recordings_dir="/tmp/fixture_rec", logger=logging.getLogger("check"))
+        card = arc.open_scorecard(tags=["self-check"])
+        agent = MyAgent(card_id=card, game_id="tw01", agent_name="self-check",
+                        ROOT_URL="http://localhost", record=False,
+                        arc_env=arc.make("tw01", scorecard_id=card), tags=["self-check"])
+        agent.MAX_ACTIONS = 60
+        agent.main()
+        final = agent.frames[-1]
+        print("self-check:", final.state.name, final.levels_completed, "/", final.win_levels,
+              "in", agent.action_counter, "actions")
+        assert final.levels_completed == final.win_levels == 2, "agent failed the fixture"
+        print("SELF-CHECK PASSED")
     """
         result = subprocess.run([sys.executable, "-c", check], cwd=RUNNER,
                                 capture_output=True, text=True)

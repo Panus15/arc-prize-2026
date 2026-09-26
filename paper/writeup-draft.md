@@ -174,7 +174,7 @@ before believing an agent works:
 3. Measure component accuracy and playing ability separately. Ours diverged
    completely: 79% and zero levels.
 
-Everything here is reproducible. The main table comes from a single command, 250
+Everything here is reproducible. The main table comes from a single command, 252
 tests cover the library, and every figure traces to a document recording the run
 that produced it — including the figures that contradict our earlier claims.
 
