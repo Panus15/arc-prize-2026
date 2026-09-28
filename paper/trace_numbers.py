@@ -35,7 +35,9 @@ def shippable(text: str) -> str:
     text = re.sub(r"\*\(~?[^)]*\)\*", "", text)  # draft word-budget annotations
     lines = [line for line in text.splitlines() if not re.match(r"\s*>\s*[฀-๿]", line)]
     lines = [re.sub(r"^#+\s*\d+\.\s*", "", line) for line in lines]  # "## 4." section numbers
-    return "\n".join(lines)
+    text = "\n".join(lines)
+    text = re.sub(r"`[^`]*`", "", text)  # code spans: identifiers, not figures
+    return re.sub(r"\S+\.(?:com|org|io)/\S*", "", text)  # addresses, e.g. the repository URL
 
 
 def variants(figure: str) -> set[str]:

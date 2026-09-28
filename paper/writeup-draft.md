@@ -178,7 +178,8 @@ Everything here is reproducible. The main table comes from a single command, 254
 tests cover the library, and every figure traces to a document recording the run
 that produced it — including the figures that contradict our earlier claims.
 
-> เติม: ลิงก์ repo
+Code, data and an index from each figure to its command:
+github.com/Panus15/arc-prize-2026 (MIT-0).
 
 ## 8. Limitations  *(~60 words — needs the live run)*
 

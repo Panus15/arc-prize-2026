@@ -19,7 +19,8 @@ import sys
 from pathlib import Path
 
 LIMIT = 1500
-RESERVED = 70  # §1 closing line and §8 result sentence, both waiting on the live run
+RESERVED = 60  # §1 closing line (~25) and §8 result (~35), both waiting on the live run;
+#               the repository link that shared this reserve is now written
 
 DRAFT = Path(__file__).resolve().parent / "writeup-draft.md"
 
