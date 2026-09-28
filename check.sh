@@ -15,7 +15,12 @@ step "lint"
 step "tests"
 out=$(cd agi3 && PYTHONPATH=. ../"$PY" -m pytest 2>&1) || { echo "$out" | tail -30; exit 1; }
 echo "$out" | tail -1
-passed=$(echo "$out" | sed -n 's/^\([0-9]*\) passed.*/\1/p' | tail -1)
+# The suite's size is what ran plus what was skipped: a fresh clone skips the
+# few tests that need the official runner (agi3/scripts/vendor_framework.sh).
+summary=$(echo "$out" | tail -1)
+passed=$(echo "$summary" | grep -o '[0-9]* passed' | grep -o '[0-9]*' || echo 0)
+skipped=$(echo "$summary" | grep -o '[0-9]* skipped' | grep -o '[0-9]*' || echo 0)
+passed=$((passed + skipped))
 claimed=$(tr '\n' ' ' < paper/writeup-draft.md | grep -o '[0-9][0-9]* tests cover' | grep -o '^[0-9]*' || true)
 if [ -n "$claimed" ] && [ "$claimed" != "$passed" ]; then
     echo "the writeup says $claimed tests; the suite has $passed"; exit 1

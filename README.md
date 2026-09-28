@@ -44,6 +44,7 @@ simulator trustworthy.
 git clone https://github.com/Panus15/arc-prize-2026 && cd arc-prize-2026
 (cd agi3 && ./setup.sh)          # Python 3.12, as the competition SDK requires
 ./check.sh                        # lint, tests, word budget, every writeup figure traced, no secrets
+agi3/scripts/vendor_framework.sh  # optional: fetch the official runner; 5 more tests then run
 cd agi3 && PYTHONPATH=. .venv/bin/python scripts/simulation_gap.py --skip-traces   # the table above
 ```
 
