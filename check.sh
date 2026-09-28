@@ -10,7 +10,7 @@ PY=agi3/.venv/bin/python
 step() { printf '\n== %s\n' "$1"; }
 
 step "lint"
-ruff check --config agi3/ruff.toml agi3/ paper/
+"$PY" -m ruff check --config agi3/ruff.toml agi3/ paper/
 
 step "tests"
 out=$(cd agi3 && PYTHONPATH=. ../"$PY" -m pytest 2>&1) || { echo "$out" | tail -30; exit 1; }
