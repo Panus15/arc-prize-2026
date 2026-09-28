@@ -88,11 +88,11 @@ Each looked settled in one arena and failed in the next. Each was caught by
 testing against data we had not generated. The mechanisms, not the anecdotes,
 are the result.
 
-**One.** Matching objects between frames by exact shape signature scored 88% in
-the quiet environment and 0.4% on 2,276 real transitions, recovering the full
-mapping in 1 game of 25. *Mechanism:* real transitions show 1,040 object
-appearances and 786 disappearances against 992 movements — an animating sprite
-does not match itself between frames.
+**One.** Matching objects between frames by exact shape signature found one
+clean movement in 95% of moves in the quiet environment and 0.4% of 2,276 real
+ones, recovering the full mapping in 1 game of 25. *Mechanism:* only 1,255 of
+those real moves show anything moving; 1,741 show objects appearing — an
+animating sprite does not match itself between frames.
 
 **Two.** Our click policy learned which colours respond to a click. In our
 environment a wrong click left the board still, making the signal decisive. In
@@ -174,7 +174,7 @@ before believing an agent works:
 3. Measure component accuracy and playing ability separately. Ours diverged
    completely: 79% and zero levels.
 
-Everything here is reproducible. The main table comes from a single command, 252
+Everything here is reproducible. The main table comes from a single command, 254
 tests cover the library, and every figure traces to a document recording the run
 that produced it — including the figures that contradict our earlier claims.
 
@@ -184,8 +184,7 @@ that produced it — including the figures that contradict our earlier claims.
 
 Everything was measured against recorded games and environments we wrote. Our
 submitted walker clears realistically noisy boards only in environments we
-wrote. One recorded game completes nothing in 676 clicks, suggesting some games
-need a sequence or a relative position rather than a colour, which our methods
-cannot express.
+wrote. In one recorded game 676 clicks clear nothing; all 22 of its completions
+came from ACTION5, which a colour rule cannot express.
 
 > เติมหลังรันเกมสด: ผลจริง · ช่องว่างชั้นที่ 5 เจอหรือไม่

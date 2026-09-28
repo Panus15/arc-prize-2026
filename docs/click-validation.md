@@ -76,6 +76,11 @@
 
 ## 6. ทำซ้ำ
 
-สคริปต์วิเคราะห์อยู่ที่ scratchpad (ไม่ได้เก็บใน repo — อ่าน trace จากภายนอก)
-โครงเดียวกับ `scripts/validate_control.py` ใช้ `arcagi3.replay` อ่าน trace
-แล้วดึงพิกัดคลิกจาก `action_display` ด้วย `MOUSE\(row=(\d+),\s*col=(\d+)\)`
+```bash
+cd agi3 && PYTHONPATH=. .venv/bin/python scripts/click_signal.py --traces <duck-harness>/example-run/artifacts
+```
+ให้ผลตรงกับตารางในเอกสารนี้ทุกตัว: เปลี่ยนกระดาน 91–100% · ผ่านด่าน 1.0% ของ 4,305 คลิก ·
+สีที่ดีที่สุด 5.2 เท่า · sb26 คลิก 676 ครั้งไม่ผ่านเลย
+
+(เดิมสคริปต์อยู่นอก repo — ย้ายเข้ามา 28 ก.ย. 2026 ตอนนี้ sb26 มีคำอธิบายแล้ว:
+ทั้ง 22 ครั้งที่ผ่านด่านมาจาก ACTION5 ไม่ใช่คลิก — `mode-switching.md`)

@@ -222,7 +222,7 @@ def cells() -> list[dict]:
 
         | # | Looked settled | Then failed | Mechanism |
         |---|---|---|---|
-        | 1 | object matching, 88% in our mock | **0.4%** on 2,276 real transitions | an animating sprite does not match itself between frames |
+        | 1 | object matching finds one clean movement in 95% of moves in our mock | **0.4%** of 2,276 real moves | only 1,255 real moves show anything moving; an animating sprite does not match itself between frames |
         | 2 | "the board changed" as a click signal | **worthless** — 91–100% of real clicks change the board | a signal present almost always separates nothing |
         | 3 | our best walking policy, 3/3 levels | **0/3** once the board is noisy | the centre of mass is dragged sideways by animation |
         | 4 | cell alignment, 3/3 on the *calibrated* mock | **55%** on real boards, against the centroid's 79% | alignment discards an observation whenever nothing lines up |

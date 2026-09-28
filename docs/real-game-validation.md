@@ -23,9 +23,20 @@ trace ของผู้ชนะมี board 64×64 จริง พร้อ�
 
 บน mock วิธีนี้ได้ 88% แต่บนเกมจริงได้ **0.4%** — mock ง่ายเกินจริงไปมาก
 
+> 🔧 **แก้ไข 28 ก.ย. 2026 — "88%" เทียบกับ "0.4%" ไม่ได้** 88% คือ*ประสิทธิภาพ* ของ explorer
+> บน mock (baseline 30 ÷ 34 action) ส่วน 0.4% คือ*สัดส่วน transition* ที่หาวัตถุขยับตัวเดียวเจอ
+> ตัวชี้วัดเดียวกันบน mock คือ **474 จาก 500 = 94.8%** (บน noise-calibrated mock **0.0%**)
+> — `scripts/object_matching.py` เปเปอร์ใช้ตัวเลขนี้แทนแล้ว (ปัดเป็น 95%)
+
 ### สาเหตุ
 
 นับการเปลี่ยนแปลงต่อ 1 transition บนเกมจริง: **appeared 1,040 · moved 992 · vanished 786**
+
+> 🔧 **แก้ไข 28 ก.ย. 2026 — ตัวเลขชุดข้างบนมาจากตัวอย่างย่อย** (8 เกมแรก เกมละไม่เกิน 40
+> transition ที่กระดานเปลี่ยน) ไม่ใช่ทั้ง 2,276 ตัว ข้อมูลเต็มจาก `scripts/object_matching.py`:
+> ใน transition การเดินจริง 2,276 ตัว **มีแค่ 1,255 ตัวที่เห็นอะไรขยับเลย** ขณะที่ **1,741 ตัวเห็นวัตถุโผล่**
+> และ 1,743 ตัวเห็นวัตถุหาย (นับเป็นเหตุการณ์: appeared 5,812 · moved 7,709 · vanished 5,418)
+> ข้อสรุปเดิมยังยืน — วัตถุที่ animate จับคู่กับตัวเองข้ามเฟรมไม่ได้ — เปเปอร์ใช้ตัวเลขข้อมูลเต็มแทนแล้ว
 
 วัตถุจริง**เปลี่ยนรูปร่างระหว่างเฟรม** (sprite animate, บังกันบางส่วน, HUD เดินตลอด)
 การจับคู่ด้วย hash ที่ต้องเหมือนเป๊ะจึงมองว่าวัตถุเดิม "หายไปแล้วมีตัวใหม่โผล่" แทนที่จะเป็น "ขยับ"
@@ -101,9 +112,7 @@ agent ที่รู้ว่าตัวเอง "ยังไม่มั่
 ```bash
 git clone --depth 1 https://github.com/Tufalabs/duck-harness.git
 cd agi3 && ./setup.sh
-PYTHONPATH=. .venv/bin/python - <<'PY'
-from arcagi3.control import ControlLearner
-from arcagi3.replay import read_transitions, LABEL_DIRECTION
-# ดู arcagi3/replay.py สำหรับรูปแบบไฟล์ trace
-PY
+PYTHONPATH=. .venv/bin/python scripts/object_matching.py --traces <duck-harness>/example-run/artifacts  # §2
+PYTHONPATH=. .venv/bin/python scripts/validate_control.py --traces <...>                              # §3
 ```
+(เดิมหัวข้อนี้มีแค่โค้ด import ไม่มีการคำนวณจริง — เติม 28 ก.ย. 2026)
